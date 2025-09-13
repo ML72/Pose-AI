@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { Keypoints } from '../types/Keypoints';
 import { drawPoseOnCanvas } from '../utils/draw';
 
@@ -76,7 +76,7 @@ const KeypointVisualization: React.FC<KeypointVisualizationProps> = ({
           borderRadius: 1
         }}
       >
-        No pose data available
+        <Typography variant="caption" color="text.secondary">No pose data available</Typography>
       </Box>
     );
   }

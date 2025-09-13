@@ -74,8 +74,8 @@ const ResultsPage: React.FC = () => {
   const getMetrics = () => {
     if (!userPoseKeypoints || !userPoseKeypoints.keypoints.length) {
       return [
-        { label: 'Posture', value: 'Not analyzed' },
-        { label: 'Keypoints', value: 'Not detected' },
+        { label: 'Posture', value: 'N/A' },
+        { label: 'Keypoints', value: 'N/A' },
         { label: 'Analysis', value: 'Upload required' }
       ];
     }
@@ -253,9 +253,7 @@ const ResultsPage: React.FC = () => {
                     ))}
                   </Stack>
 
-                  <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
-                    <Button variant="outlined" startIcon={<Download />}>Download Report</Button>
-                  </Stack>
+                  {/* Download Report button removed per request */}
                 </Stack>
               </Paper>
             </Box>
@@ -346,10 +344,7 @@ const ResultsPage: React.FC = () => {
                       <Chip size="small" label="Natural" variant="outlined" />
                       <Chip size="small" label="Balanced" variant="outlined" />
                     </Stack>
-                    <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1.5 }}>
-                      <Button size="small" variant="outlined">Details</Button>
-                      <Button size="small" variant="contained">Apply</Button>
-                    </Stack>
+                    {/* Buttons removed as requested */}
                   </CardContent>
                 </Card>
               </Grid>
