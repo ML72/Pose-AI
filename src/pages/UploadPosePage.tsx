@@ -28,7 +28,7 @@ import {
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { setNewAlert } from '../service/alert';
-import { setUserPoseImage, setUserPoseKeypoints, setSimilarImageFilenames } from '../store/slices/data';
+import { setUserPoseImage, setUserPoseKeypoints, setSimilarImageFilenames, setDesiredStyle, setPrioritizedAreas, setOutputMode } from '../store/slices/data';
 import { estimateKeypointsWithBlazePose, convertImageToBase64 } from '../service/blazePose';
 import { findSimilarPoses } from '../utils/poseComparison';
 
@@ -57,6 +57,14 @@ const UploadPosePage: React.FC = () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
+
+  // Keep Redux in sync with selections so Results page can use them
+  React.useEffect(() => {
+    // Dispatch current selections whenever they change
+    dispatch(setDesiredStyle(selectedGenres));
+    dispatch(setPrioritizedAreas(selectedFocus));
+    dispatch(setOutputMode(mode));
+  }, [dispatch, selectedGenres, selectedFocus, mode]);
 
   const handlePickClick = () => inputRef.current?.click();
 
@@ -323,7 +331,11 @@ const UploadPosePage: React.FC = () => {
                             label={m}
                             color={mode === m ? 'primary' : 'default'}
                             variant={mode === m ? 'filled' : 'outlined'}
-                            onClick={() => setMode(m as 'Casual' | 'Formal')}
+                            onClick={() => {
+                              setMode(m as 'Casual' | 'Formal');
+                              // mirror selection to Redux
+                              dispatch(setOutputMode(m));
+                            }}
                           />
                         ))}
                       </Stack>
@@ -343,11 +355,13 @@ const UploadPosePage: React.FC = () => {
                               label={g}
                               color={selected ? 'primary' : 'default'}
                               variant={selected ? 'filled' : 'outlined'}
-                              onClick={() =>
-                                setSelectedGenres((prev) =>
-                                  prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]
-                                )
-                              }
+                              onClick={() => {
+                                setSelectedGenres((prev) => {
+                                  const next = prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g];
+                                  dispatch(setDesiredStyle(next));
+                                  return next;
+                                });
+                              }}
                               sx={{ mb: 1 }}
                             />
                           );
@@ -369,11 +383,13 @@ const UploadPosePage: React.FC = () => {
                               label={f}
                               color={selected ? 'secondary' : 'default'}
                               variant={selected ? 'filled' : 'outlined'}
-                              onClick={() =>
-                                setSelectedFocus((prev) =>
-                                  prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]
-                                )
-                              }
+                              onClick={() => {
+                                setSelectedFocus((prev) => {
+                                  const next = prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f];
+                                  dispatch(setPrioritizedAreas(next));
+                                  return next;
+                                });
+                              }}
                               sx={{ mb: 1 }}
                             />
                           );
