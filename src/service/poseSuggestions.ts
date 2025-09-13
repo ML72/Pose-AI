@@ -32,8 +32,9 @@ const openai = new OpenAI({
 // Fixed prompt for pose analysis and suggestions
 const POSE_ANALYSIS_PROMPT = `You are an expert pose analyst instructor. I will provide you with three images:
 
-1. An original image of a person in a pose
-2. Two reference images showing suggested poses for the original pose
+1. Image 1: An original image of a person in a pose
+2. Image 2: A reference image showing suggested poses for the original pose
+3. Image 3: A reference image showing suggested poses for the original pose
 
 Instructions:
 The user wants the desired style of the pose of DESIRED_STYLE.
