@@ -50,11 +50,10 @@ const ResultsPage: React.FC = () => {
   const userImageUrl = location.state?.userImageUrl ?? null;
   const fileName = location.state?.fileName ?? 'uploaded_photo.jpg';
 
-  // Placeholder recommended poses – replace with real data later
+  // Placeholder editorial poses – reduced to two options
   const recommended = [
     { id: 1, title: 'Editorial Pose A' },
-    { id: 2, title: 'Portrait Pose B' },
-    { id: 3, title: 'Full-Body Pose C' }
+    { id: 2, title: 'Editorial Pose B' }
   ];
 
   // Basic stub metrics – swap for real analysis later
@@ -181,12 +180,12 @@ const ResultsPage: React.FC = () => {
             >
               Recommended Poses
             </Typography>
-            <Typography variant="body2" color="text.secondary">Three curated options based on your photo. Each shows a reference and your photo adapted to match.</Typography>
+            <Typography variant="body2" color="text.secondary">Two curated editorial options based on your photo. Each shows a reference and your photo adapted to match.</Typography>
           </Stack>
 
           <Grid container spacing={3}>
             {recommended.map((pose) => (
-              <Grid key={pose.id} item xs={12} md={4}>
+              <Grid key={pose.id} item xs={12} md={6}>
                 <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid rgba(106, 17, 203, 0.18)', background: 'linear-gradient(145deg, rgba(255,255,255,0.96) 0%, rgba(252,248,255,0.96) 100%)' }}>
                   <CardContent>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>{pose.title}</Typography>
