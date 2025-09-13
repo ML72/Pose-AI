@@ -2,7 +2,8 @@ import React, { useRef, useState } from "react";
 import * as posenet from "@tensorflow-models/posenet";
 import "@tensorflow/tfjs";
 
-import { Keypoints } from '../types/keypoints';
+import { Keypoints, Keypoint } from "../types/Keypoints";
+import { cosineSim } from '../utils/calculate';
 
 const PoseNet: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -27,7 +28,7 @@ const PoseNet: React.FC = () => {
 
   // Convert posenet pose to your Keypoints type
   const mapPoseNetToKeypoints = (pose: posenet.Pose): Keypoints => {
-    const keypoints: Keypoints[] = pose.keypoints.map((kp) => ({
+    const keypoints: Keypoint[] = pose.keypoints.map((kp) => ({
       x: kp.position.x,
       y: kp.position.y,
       score: kp.score,
@@ -36,12 +37,20 @@ const PoseNet: React.FC = () => {
     return { keypoints, keypoints3D: [] }; // keep keypoints3D empty for now
   };
 
-  const calculateDistance = (kps1: Keypoints[], kps2: Keypoints[]) => {
-    return kps1.reduce((sum, Keypoints, index) => {
-      const dx = Keypoints.x - kps2[index].x;
-      const dy = Keypoints.y - kps2[index].y;
-      return sum + Math.sqrt(dx * dx + dy * dy);
-    }, 0);
+  const calculateDistance = (kps1: Keypoint[], kps2: Keypoint[]) => {
+    let sum = 0;
+    let count = 0;
+
+    skeleton.forEach(([i, j], idx) => {
+      const dx = cosineSim(
+        kps1[i].x, kps1[i].y, kps1[j].x, kps1[j].y,
+        kps2[i].x, kps2[i].y, kps2[j].x, kps2[j].y
+      );
+      sum += dx;
+      count++;
+    });
+
+    return sum / count; 
   };
 
   const findMostSimilarImage = async (uploadedPose: Keypoints) => {

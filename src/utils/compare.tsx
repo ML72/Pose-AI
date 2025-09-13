@@ -1,5 +1,5 @@
 
-import { Keypoints } from '../types/keypoints';
+import { Keypoints } from '../types/Keypoints';
 import { normalizeKeypoints, cosineSim } from './calculate';
 
 const WEIGHTS = {

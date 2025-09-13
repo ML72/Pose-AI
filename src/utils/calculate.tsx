@@ -1,4 +1,4 @@
-import { Keypoint } from "@tensorflow-models/pose-detection";
+import { Keypoint } from "../types/Keypoints";
 
 export const cosineSim = (
     x1: number, y1: number, x2: number, y2: number,
