@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@2.2.2"></script>
+    <title>Keypoint Extraction Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #status { margin: 20px 0; font-weight: bold; }
+        #progress { margin: 10px 0; }
+        .error { color: red; }
+        .success { color: green; }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            width: 100%;
+            height: 200px;
+            text-align: center;
+            padding-top: 80px;
+            margin: 20px 0;
+            background: #fafafa;
+        }
+        .upload-area.drag-over {
+            border-color: #007cba;
+            background: #f0f8ff;
+        }
+        #fileInput {
+            margin: 20px 0;
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+        }
+        .file-count {
+            margin: 10px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pose Keypoint Extraction Tool</h1>
+    
+    <div class="info">
+        <strong>Instructions:</strong>
+        <ol>
+            <li>Click "Choose Files" below and select ALL images from your assets/images folder</li>
+            <li>Or drag and drop the images into the upload area</li>
+            <li>Click "Start Extraction" to process all selected images</li>
+            <li>Download the generated keypoints.json file when complete</li>
+        </ol>
+    </div>
+    
+    <div class="upload-area" id="uploadArea">
+        <p>📁 Drag and drop images here or click "Choose Files" below</p>
+    </div>
+    
+    <input type="file" id="fileInput" accept="image/*" multiple>
+    <div class="file-count" id="fileCount">No files selected</div>
+    
+    <div id="status">Select images and click 'Start Extraction' to begin</div>
+    <div id="progress"></div>
+    
+    <button id="startBtn" onclick="startExtraction()" disabled>Start Extraction</button>
+    <button id="downloadBtn" onclick="downloadResults()" style="display:none;">Download keypoints.json</button>
+    
+    <script>
+        let extractionResults = [];
+        let net = null;
+        let selectedFiles = [];
+
+        // File handling
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileCount = document.getElementById('fileCount');
+        const startBtn = document.getElementById('startBtn');
+
+        fileInput.addEventListener('change', handleFiles);
+        
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            fileInput.files = e.dataTransfer.files;
+            handleFiles({ target: { files } });
+        });
+        
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        function handleFiles(event) {
+            const files = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
+            selectedFiles = files;
+            
+            if (files.length > 0) {
+                fileCount.textContent = `${files.length} image files selected`;
+                startBtn.disabled = false;
+                document.getElementById('status').textContent = 'Files selected! Click "Start Extraction" to begin processing.';
+            } else {
+                fileCount.textContent = 'No valid image files selected';
+                startBtn.disabled = true;
+                document.getElementById('status').textContent = 'Please select image files to process.';
+            }
+        }
+
+        // Convert posenet pose to Keypoints format (matching your frontend)
+        const mapPoseNetToKeypoints = (pose) => {
+            const keypoints = pose.keypoints.map((kp) => ({
+                x: kp.position.x,
+                y: kp.position.y,
+                score: kp.score,
+                name: kp.part
+            }));
+            return { keypoints, keypoints3D: [] };
+        };
+
+        // Process a single uploaded file
+        const processImageFile = async (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                
+                reader.onload = async (e) => {
+                    const img = new Image();
+                    
+                    img.onload = async () => {
+                        try {
+                            console.log(`Processing: ${file.name}`);
+                            const poseNetPose = await net.estimateSinglePose(img, { flipHorizontal: false });
+                            const pose = mapPoseNetToKeypoints(poseNetPose);
+                            resolve({
+                                filename: file.name,
+                                keypoints: pose
+                            });
+                        } catch (error) {
+                            console.error(`Error processing ${file.name}:`, error);
+                            resolve(null);
+                        }
+                    };
+                    
+                    img.onerror = () => {
+                        console.error(`Failed to load image: ${file.name}`);
+                        resolve(null);
+                    };
+                    
+                    img.src = e.target.result;
+                };
+                
+                reader.onerror = () => {
+                    console.error(`Failed to read file: ${file.name}`);
+                    resolve(null);
+                };
+                
+                reader.readAsDataURL(file);
+            });
+        };
+
+        // Main extraction function
+        const startExtraction = async () => {
+            if (selectedFiles.length === 0) {
+                alert('Please select image files first!');
+                return;
+            }
+
+            try {
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('status').textContent = 'Loading PoseNet model...';
+                
+                // Load PoseNet model with same config as your frontend
+                net = await posenet.load({
+                    architecture: "ResNet50",
+                    outputStride: 16,  // Lower output stride = higher accuracy (16 or 32 for ResNet50)
+                    inputResolution: { width: 513, height: 513 },  // Higher resolution = better accuracy
+                    quantBytes: 4,  // Higher precision (4 bytes vs 2 bytes)
+                });
+                
+                document.getElementById('status').textContent = 'Model loaded! Processing images...';
+                extractionResults = [];
+                
+                // Process images with progress updates
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    
+                    document.getElementById('progress').textContent = 
+                        `Processing ${i + 1}/${selectedFiles.length}: ${file.name}`;
+                    
+                    const result = await processImageFile(file);
+                    if (result) {
+                        extractionResults.push(result);
+                    }
+                    
+                    // Small delay to prevent browser freeze
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+                
+                document.getElementById('status').textContent = 
+                    `Completed! Successfully processed ${extractionResults.length}/${selectedFiles.length} images.`;
+                
+                if (extractionResults.length > 0) {
+                    document.getElementById('status').className = 'success';
+                    document.getElementById('downloadBtn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('status').className = 'error';
+                    document.getElementById('status').textContent = 'No images were processed successfully. Check console for errors.';
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('status').textContent = 'Error occurred: ' + error.message;
+                document.getElementById('status').className = 'error';
+            } finally {
+                document.getElementById('startBtn').disabled = false;
+            }
+        };
+
+        // Download results
+        const downloadResults = () => {
+            if (extractionResults.length === 0) {
+                alert('No results to download');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(extractionResults, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'keypoints.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            console.log(`Downloaded keypoints.json with ${extractionResults.length} entries`);
+        };
+    </script>
+</body>
+</html>
