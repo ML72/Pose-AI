@@ -210,35 +210,29 @@ const ResultsPage: React.FC = () => {
       <Box sx={{ py: { xs: 3, sm: 5 } }}>
         <Container maxWidth="lg" sx={{ position: 'relative' }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
-            <Stack spacing={1}>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                }}
-              >
-                Analysis Results
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                <Chip label={`File: ${fileName || '—'}`} variant="outlined" size="small" />
-                <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
-                <Chip 
-                  label={userPoseKeypoints ? "Pose Analyzed" : "No Analysis"} 
-                  color={userPoseKeypoints ? "success" : "warning"} 
-                  variant="outlined" 
-                  size="small" 
-                />
-              </Stack>
-            </Stack>
-
-            <Stack direction="row" spacing={1}>
+            <Stack spacing={2} alignItems="flex-start">
               <Button startIcon={<ArrowBack />} variant="text" onClick={() => history.push('/upload')}>
                 Back
               </Button>
+              <Stack direction="column" spacing={2} width={'100%'} style={{ marginTop: 30 }}>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}
+                >
+                  Analysis Results
+                </Typography>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', marginLeft: 'auto' }}>
+                  <Chip label={`File: ${fileName || '—'}`} variant="outlined" size="small" />
+                  <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
+                  <Chip label="v0 Preview" color="secondary" variant="outlined" size="small" />
+                </Stack>
+              </Stack>
             </Stack>
           </Stack>
         </Container>
