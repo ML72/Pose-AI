@@ -81,7 +81,7 @@ const LandingPage: React.FC = () => {
     <CustomPage useBindingContainer={false}>
       {/* Hero Section */}
       {/* Header */}
-      <AppBar position="fixed" sx={{ backgroundColor: 'rgb(250, 245, 248)', opacity: 1, height: '10vh', justifyContent: 'center', boxShadow: 'none' }}>
+      <AppBar position="fixed" sx={{ backgroundColor: 'rgba(249, 231, 242, 0.5)', opacity: 1, height: '10vh', justifyContent: 'center', boxShadow: 'none' }}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: 'rgb(157, 114, 165)', display: 'flex', alignItems: 'center', fontSize: '1rem', letterSpacing: 2, fontWeight: '600' }}>
             <Box

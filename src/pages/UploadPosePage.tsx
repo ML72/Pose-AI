@@ -88,27 +88,27 @@ const UploadPosePage: React.FC = () => {
     }
 
     setIsAnalyzing(true);
-    
+
     try {
       // Convert image to base64
       const base64Image = await convertImageToBase64(file);
-      
+
       // Create an image element for pose detection
       const img = new Image();
       img.src = previewUrl!;
-      
+
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = reject;
       });
-      
+
       // Run pose detection with BlazePose
       const keypoints = await estimateKeypointsWithBlazePose(img);
-      
+
       // Save keypoints to Redux store
       dispatch(setUserPoseImage(base64Image));
       dispatch(setUserPoseKeypoints(keypoints));
-      
+
       // Load keypoints dataset and find similar poses
       try {
         const response = await fetch('/data/keypoints.json');
@@ -116,22 +116,22 @@ const UploadPosePage: React.FC = () => {
           throw new Error('Failed to load keypoints dataset');
         }
         const keypointsDataset = await response.json();
-        
+
         // Find top 2 similar poses
         const similarFilenames = findSimilarPoses(keypoints.keypoints, keypointsDataset, 2);
         dispatch(setSimilarImageFilenames(similarFilenames));
-        
+
         console.log('Found similar poses:', similarFilenames);
       } catch (datasetError) {
         console.warn('Could not load pose comparison dataset:', datasetError);
         // Continue without similar poses - this is not a critical failure
       }
-      
+
       setNewAlert(dispatch, { msg: 'Pose analysis completed successfully!', alertType: 'success' });
-      
+
       // Navigate to results page
       history.push('/results', { userImageUrl: previewUrl, fileName: file?.name });
-      
+
     } catch (error) {
       console.error('Error during pose analysis:', error);
       setNewAlert(dispatch, { msg: 'Failed to analyze pose. Please try again.', alertType: 'error' });
@@ -179,35 +179,33 @@ const UploadPosePage: React.FC = () => {
             }
           `}
         </style>
-        <Container maxWidth="lg" sx={{ position: 'relative' }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" sx={{ mb: 2 }}>
-            <Stack spacing={1}>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                }}
-              >
-                Upload your photo
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                <Chip label="Choose an image" variant="outlined" size="small" />
-                <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
-              </Stack>
-            </Stack>
-
-            <Stack direction="row" spacing={1}>
-              <Button startIcon={<ArrowBack />} variant="text" onClick={() => history.push('/')}>Back</Button>
-            </Stack>
-          </Stack>
-
-          <Grid container spacing={4} alignItems="stretch">
+        <Container maxWidth="lg" sx={{ position: 'relative' }} >
+          <Grid container spacing={2} alignItems="center" justifyContent="space-between">
             {/* Uploader Card */}
-            <Grid item xs={12} md={7}>
+            <Grid direction={{ xs: 'column' }} item xs={12} md={6} alignItems={{ xs: 'flex-start' }}>
+              <Stack direction={{ xs: 'column' }} spacing={2} alignItems={{ xs: 'flex-start'}} justifyContent="space-between" sx={{ mb: 2 }}>
+                <Stack direction="row" spacing={1}>
+                  <Button startIcon={<ArrowBack />} variant="text" onClick={() => history.push('/')}>Back</Button>
+                </Stack>
+                <Stack spacing={1}>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }}
+                  >
+                    Upload your photo
+                  </Typography>
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                    <Chip label="Choose an image" variant="outlined" size="small" />
+                    <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
+                  </Stack>
+                </Stack>
+              </Stack>
               <Box sx={{ p: 0.75, borderRadius: 3, background: 'primary.dark' }}>
                 <Paper
                   elevation={0}
@@ -301,17 +299,17 @@ const UploadPosePage: React.FC = () => {
                     )}
 
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="flex-end">
-                      <Button variant="outlined" onClick={() => { setFile(null); setPreviewUrl(null); if (inputRef.current) inputRef.current.value = ""; }} disabled={!file || isAnalyzing}>
+                      <Button variant="outlined" onClick={() => { setFile(null); setPreviewUrl(null); if (inputRef.current) inputRef.current.value = ""; }} disabled={!file}>
                         Clear
                       </Button>
                       <Button
                         variant="contained"
-                        endIcon={isAnalyzing ? <CircularProgress size={16} color="inherit" /> : <AutoAwesome />}
+                        endIcon={<AutoAwesome />}
                         onClick={onAnalyze}
-                        disabled={!file || isAnalyzing}
+                        disabled={!file}
                         sx={{ px: 3 }}
                       >
-                        {isAnalyzing ? 'Analyzing...' : 'Analyze'}
+                        Analyze
                       </Button>
                     </Stack>
                   </Stack>
