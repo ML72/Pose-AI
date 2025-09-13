@@ -70,9 +70,9 @@ const LandingPage: React.FC = () => {
   ];
 
   const highlights = [
-    { icon: <LockOutlined sx={{ mr: 1 }} />, label: 'Privacy-first' },
-    { icon: <Speed sx={{ mr: 1 }} />, label: 'Real-time' },
-    { icon: <CloudDone sx={{ mr: 1 }} />, label: 'Runs in your browser' }
+  { icon: <LockOutlined fontSize="small" sx={{ mr: 0.5 }} />, label: 'Encrypted Data' },
+  { icon: <Speed fontSize="small" sx={{ mr: 0.5 }} />, label: 'Real Time' },
+  { icon: <CloudDone fontSize="small" sx={{ mr: 0.5 }} />, label: 'Privacy First' }
   ];
 
   return (
@@ -102,11 +102,6 @@ const LandingPage: React.FC = () => {
             zIndex: 0
           },
           // Floating glow orbs
-          '@keyframes floatSlow': {
-            '0%': { transform: 'translateY(0px)' },
-            '50%': { transform: 'translateY(-12px)' },
-            '100%': { transform: 'translateY(0px)' }
-          },
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -329,7 +324,7 @@ const LandingPage: React.FC = () => {
                       </g>
                     </svg>
                     {/* floating highlight */}
-                    <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', gap: 1, px: 1, py: 0.5, borderRadius: 999, background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(106,17,203,0.25)', backdropFilter: 'blur(6px)', animation: 'floatSlow 6s ease-in-out infinite', fontSize: { xs: '0.8rem', sm: '1rem' } }}>
+                    <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', gap: 1, px: 1, py: 0.5, borderRadius: 999, background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(106,17,203,0.25)', backdropFilter: 'blur(6px)', fontSize: { xs: '0.8rem', sm: '1rem' } }}>
                       <Bolt fontSize="small" sx={{ color: 'primary.main' }} />
                       <Typography variant="caption" sx={{ color: 'text.secondary' }}>Real-time</Typography>
                     </Box>

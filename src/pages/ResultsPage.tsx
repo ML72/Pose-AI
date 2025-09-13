@@ -73,7 +73,7 @@ const ResultsPage: React.FC = () => {
     <CustomPage useBindingContainer={false}>
       {/* Header / Hero-lite */}
       <Box sx={{ py: { xs: 3, sm: 5 } }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ position: 'relative' }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
             <Stack spacing={1}>
               <Typography
@@ -99,7 +99,6 @@ const ResultsPage: React.FC = () => {
               <Button startIcon={<ArrowBack />} variant="text" onClick={() => history.push('/upload')}>
                 Back
               </Button>
-              <Button variant="contained" startIcon={<AutoAwesome />}>Improve</Button>
             </Stack>
           </Stack>
         </Container>

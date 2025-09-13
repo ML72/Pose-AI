@@ -21,7 +21,8 @@ import {
   Image as ImageIcon,
   AutoAwesome,
   CheckCircle,
-  Style as StyleIcon
+  Style as StyleIcon,
+  ArrowBack
 } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
@@ -99,22 +100,29 @@ const UploadPosePage: React.FC = () => {
       >
         {/* Removed grid and gradient overlays for plain white background */}
         <Container maxWidth="lg" sx={{ position: 'relative' }}>
-          <Stack spacing={1} alignItems="flex-start" sx={{ mb: 2 }}>
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 700,
-                background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}
-            >
-              Upload your photo
-            </Typography>
-            <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 720 }}>
-              Add an image to analyze and choose your preferred style so we can tailor pose suggestions.
-            </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" sx={{ mb: 2 }}>
+            <Stack spacing={1}>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}
+              >
+                Upload your photo
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                <Chip label="Choose an image" variant="outlined" size="small" />
+                <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
+              </Stack>
+            </Stack>
+
+            <Stack direction="row" spacing={1}>
+              <Button startIcon={<ArrowBack />} variant="text" onClick={() => history.push('/')}>Back</Button>
+            </Stack>
           </Stack>
 
           <Grid container spacing={4} alignItems="stretch">
