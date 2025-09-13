@@ -212,3 +212,9 @@ Model/CDN considerations:
 
 MIT © 2025 Michael, Keyu, Yuheng, Yifan — see `LICENSE` for details.
 
+---
+
+## Assets & Image Licensing
+
+Images under `assets/images/` are used for demo only and should not be redistributed unless otherwise noted.
+
