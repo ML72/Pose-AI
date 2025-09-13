@@ -81,7 +81,8 @@ const LandingPage: React.FC = () => {
       <Box
         sx={{
           background: 'radial-gradient(1200px 600px at 80% 10%, rgba(154, 72, 245, 0.14), transparent 60%), radial-gradient(800px 400px at 10% 90%, rgba(229, 57, 53, 0.14), transparent 70%), linear-gradient(135deg, rgba(106, 17, 203, 0.10) 0%, rgba(229, 57, 53, 0.10) 100%)',
-          minHeight: '70vh',
+          minHeight: { xs: 'auto', sm: '70vh' },
+          py: { xs: 3, sm: 6 },
           display: 'flex',
           alignItems: 'center',
           position: 'relative',
@@ -226,20 +227,34 @@ const LandingPage: React.FC = () => {
                 </Stack>
               </Stack>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: { xs: 2, sm: 0 } }}>
               {/* Gradient border wrapper */}
-              <Box sx={{ p: 0.75, borderRadius: 3, background: 'linear-gradient(135deg, rgba(106,17,203,0.45), rgba(229,57,53,0.45))' }}>
+              <Box
+                sx={{
+                  p: { xs: 1.5, md: 0.75 },
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, rgba(106,17,203,0.45), rgba(229,57,53,0.45))',
+                  mt: { xs: 3, md: 0 },
+                  mb: { xs: 3, md: 0 },
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
                 <Paper
                   elevation={12}
                   sx={{
-                    p: 3,
+                    p: { xs: 2, md: 3 },
                     textAlign: 'center',
                     background: 'linear-gradient(180deg, rgba(255,255,255,0.90) 0%, rgba(255,250,252,0.90) 100%)',
                     backdropFilter: 'blur(10px)',
                     border: '1px solid rgba(106, 17, 203, 0.18)',
                     borderRadius: 2.5,
                     position: 'relative',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    width: { xs: '100%', sm: 340, md: 'auto' },
+                    minWidth: { xs: 0, sm: 260 },
+                    maxWidth: { xs: '100%', sm: 340 },
                   }}
                 >
                   <IconButton
@@ -247,8 +262,8 @@ const LandingPage: React.FC = () => {
                       background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
                       color: 'white',
                       mb: 2,
-                      width: 72,
-                      height: 72,
+                      width: { xs: 56, sm: 72 },
+                      height: { xs: 56, sm: 72 },
                       '&:hover': {
                         background: 'linear-gradient(135deg, #4C0FA3 0%, #B71C1C 100%)',
                       },
@@ -268,7 +283,8 @@ const LandingPage: React.FC = () => {
                   <Box
                     sx={{
                       position: 'relative',
-                      height: 340,
+                      height: { xs: 180, sm: 260, md: 340 },
+                      width: '100%',
                       borderRadius: 2,
                       background: 'linear-gradient(180deg, rgba(106,17,203,0.07), rgba(229,57,53,0.07))',
                       border: '1px solid rgba(106,17,203,0.25)',
@@ -313,7 +329,7 @@ const LandingPage: React.FC = () => {
                       </g>
                     </svg>
                     {/* floating highlight */}
-                    <Box sx={{ position: 'absolute', top: 16, right: 16, display: 'flex', alignItems: 'center', gap: 1, px: 1.25, py: 0.5, borderRadius: 999, background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(106,17,203,0.25)', backdropFilter: 'blur(6px)', animation: 'floatSlow 6s ease-in-out infinite' }}>
+                    <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', gap: 1, px: 1, py: 0.5, borderRadius: 999, background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(106,17,203,0.25)', backdropFilter: 'blur(6px)', animation: 'floatSlow 6s ease-in-out infinite', fontSize: { xs: '0.8rem', sm: '1rem' } }}>
                       <Bolt fontSize="small" sx={{ color: 'primary.main' }} />
                       <Typography variant="caption" sx={{ color: 'text.secondary' }}>Real-time</Typography>
                     </Box>
