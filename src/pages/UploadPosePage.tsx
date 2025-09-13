@@ -12,8 +12,6 @@ import {
   Paper,
   Stack,
   Switch,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography
 } from '@mui/material';
 import {
@@ -84,163 +82,124 @@ const UploadPosePage: React.FC = () => {
     // Basic stub logic – wire up later to actual analysis
     setNewAlert(dispatch, { msg: 'Image queued for analysis…', alertType: 'success' });
     try {
-  history.push('/results', { userImageUrl: previewUrl, fileName: file?.name });
+      history.push('/results', { userImageUrl: previewUrl, fileName: file?.name });
     } catch {}
   };
 
   return (
     <CustomPage useBindingContainer={false}>
-      {/* Hero-ish banner matching Landing vibe */}
       <Box
         sx={{
           py: { xs: 3, sm: 5 },
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          // animation: 'slideOut 0.5s ease-in-out'
         }}
       >
-        {/* Removed grid and gradient overlays for plain white background */}
+        <style>
+          {`
+            @keyframes slideIn {
+              0% {
+                opacity: 0;
+                transform: translateX(100%);
+              }
+              100% {
+                opacity: 1;
+                transform: translateX(0);
+              }
+            }
+
+            @keyframes slideOut {
+              0% {
+                opacity: 1;
+                transform: translateX(0);
+              }
+              100% {
+                opacity: 0;
+                transform: translateX(-100%);
+              }
+            }
+          `}
+        </style>
         <Container maxWidth="lg" sx={{ position: 'relative' }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" sx={{ mb: 2 }}>
-            <Stack spacing={1}>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                }}
-              >
-                Upload your photo
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                <Chip label="Choose an image" variant="outlined" size="small" />
-                <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
-              </Stack>
-            </Stack>
-
-            <Stack direction="row" spacing={1}>
-              <Button startIcon={<ArrowBack />} variant="text" onClick={() => history.push('/')}>Back</Button>
-            </Stack>
-          </Stack>
-
-          <Grid container spacing={4} alignItems="stretch">
-            {/* Uploader Card */}
-            <Grid item xs={12} md={7}>
-              <Box sx={{ p: 0.75, borderRadius: 3, background: 'primary.dark' }}>
-                <Paper
-                  elevation={0}
+          <Grid container spacing={4}>
+            {/* Left Side */}
+            <Grid item xs={12} md={6}>
+              <Stack spacing={2}>
+                <Button startIcon={<ArrowBack />} variant="text" onClick={() => history.push('/')} sx={{ alignSelf: 'flex-start', mb: 3 }}>Back</Button>
+                <Typography
+                  variant="h4"
                   sx={{
-                    p: { xs: 2, sm: 3 },
-                    borderRadius: 2.5,
-                    background: 'linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(252,248,255,0.9) 100%)',
-                    border: '1px solid rgba(106, 17, 203, 0.18)'
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    mb: 4
                   }}
                 >
-                  <Stack spacing={2}>
-                    {/* Dropzone */}
-                    <Box
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={onDrop}
-                      onClick={handlePickClick}
+                  Upload your photo
+                </Typography>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mb: 4 }}>
+                  <Chip label="Choose an image" variant="outlined" size="small" />
+                  <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
+                </Stack>
+                <Box
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={onDrop}
+                  onClick={handlePickClick}
+                  sx={{
+                    cursor: 'pointer',
+                    border: '2px dashed rgba(106, 17, 203, 0.35)',
+                    borderRadius: 2,
+                    p: { xs: 3, sm: 4 },
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: 220,
+                    background: 'linear-gradient(180deg, rgba(106,17,203,0.06), rgba(229,57,53,0.06))',
+                    '&:hover': { background: 'rgba(106,17,203,0.06)' },
+                    mb: 4
+                  }}
+                >
+                  <Stack spacing={1.5} alignItems="center">
+                    <IconButton
                       sx={{
-                        cursor: 'pointer',
-                        border: '2px dashed rgba(106, 17, 203, 0.35)',
-                        borderRadius: 2,
-                        p: { xs: 3, sm: 4 },
-                        textAlign: 'center',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        minHeight: 220,
-                        background: 'linear-gradient(180deg, rgba(106,17,203,0.06), rgba(229,57,53,0.06))',
-                        '&:hover': { background: 'rgba(106,17,203,0.06)' }
+                        background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
+                        color: 'white',
+                        width: 64,
+                        height: 64,
+                        '&:hover': { background: 'linear-gradient(135deg, #4C0FA3 0%, #B71C1C 100%)' },
+                        boxShadow: '0 10px 30px rgba(106,17,203,0.35)'
                       }}
                     >
-                      <Stack spacing={1.5} alignItems="center">
-                        <IconButton
-                          sx={{
-                            background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
-                            color: 'white',
-                            width: 64,
-                            height: 64,
-                            '&:hover': { background: 'linear-gradient(135deg, #4C0FA3 0%, #B71C1C 100%)' },
-                            boxShadow: '0 10px 30px rgba(106,17,203,0.35)'
-                          }}
-                        >
-                          <CloudUpload />
-                        </IconButton>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                          Drag & drop image here, or click to browse
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          JPG, PNG up to 10MB
-                        </Typography>
-                      </Stack>
-                      <input
-                        ref={inputRef}
-                        type="file"
-                        accept="image/*"
-                        hidden
-                        onChange={(e) => handleFiles(e.target.files)}
-                      />
-                    </Box>
-
-                    {/* Preview */}
-                    {previewUrl && (
-                      <Box>
-                        <Divider sx={{ my: 1.5 }} />
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
-                          <Box
-                            sx={{
-                              flex: '0 0 auto',
-                              width: { xs: '100%', sm: 220 },
-                              height: { xs: 220, sm: 180 },
-                              borderRadius: 2,
-                              overflow: 'hidden',
-                              border: '1px solid rgba(106, 17, 203, 0.25)',
-                              background: 'rgba(106,17,203,0.04)'
-                            }}
-                          >
-                            <img src={previewUrl} alt={file?.name || 'preview'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                          </Box>
-                          <Stack spacing={1} sx={{ flex: 1 }}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <ImageIcon color="primary" /> {file?.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {(file && `${Math.round(file.size / 1024)} KB`) || ''}
-                            </Typography>
-                            <Stack direction="row" spacing={1}>
-                              <Chip size="small" color="success" icon={<CheckCircle />} label="Ready for analysis" />
-                            </Stack>
-                          </Stack>
-                        </Stack>
-                      </Box>
-                    )}
-
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="flex-end">
-                      <Button variant="outlined" onClick={() => { setFile(null); setPreviewUrl(null); if (inputRef.current) inputRef.current.value = ""; }} disabled={!file}>
-                        Clear
-                      </Button>
-                      <Button
-                        variant="contained"
-                        endIcon={<AutoAwesome />}
-                        onClick={onAnalyze}
-                        disabled={!file}
-                        sx={{ px: 3 }}
-                      >
-                        Analyze
-                      </Button>
-                    </Stack>
+                      <CloudUpload />
+                    </IconButton>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      Drag & drop image here, or click to browse
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      JPG, PNG up to 10MB
+                    </Typography>
                   </Stack>
-                </Paper>
-              </Box>
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => handleFiles(e.target.files)}
+                  />
+                </Box>
+              </Stack>
             </Grid>
 
-            {/* Options Card */}
-            <Grid item xs={12} md={5}>
+            {/* Right Side */}
+            <Grid item xs={12} md={6}>
               <Box sx={{ p: 0.75, borderRadius: 3, background: 'secondary.dark' }}>
                 <Paper
                   elevation={0}
@@ -259,7 +218,6 @@ const UploadPosePage: React.FC = () => {
                       </Typography>
                     </Stack>
 
-                    {/* Mode Option - moved below header */}
                     <Box>
                       <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                         Mode
@@ -277,7 +235,6 @@ const UploadPosePage: React.FC = () => {
                       </Stack>
                     </Box>
 
-                    {/* Genres */}
                     <Box>
                       <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                         Desired Style
@@ -303,7 +260,6 @@ const UploadPosePage: React.FC = () => {
                       </Stack>
                     </Box>
 
-                    {/* Focus Areas */}
                     <Box>
                       <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                         What to prioritize

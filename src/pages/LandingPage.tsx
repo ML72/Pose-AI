@@ -10,7 +10,9 @@ import {
   Stack,
   Chip,
   IconButton,
-  Paper
+  Paper,
+  AppBar,
+  Toolbar
 } from '@mui/material';
 import { 
   CameraAlt, 
@@ -78,6 +80,21 @@ const LandingPage: React.FC = () => {
   return (
     <CustomPage useBindingContainer={false}>
       {/* Hero Section */}
+      {/* Header */}
+      <AppBar position="fixed" sx={{ backgroundColor: 'rgb(250, 245, 248)', opacity: 1, height: '10vh', justifyContent: 'center', boxShadow: 'none' }}>
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: 'rgb(157, 114, 165)', display: 'flex', alignItems: 'center', fontSize: '1rem', letterSpacing: 2, fontWeight: '600' }}>
+            <Box
+              component="img"
+              src="/favicon.png"
+              alt="Pose AI Logo"
+              sx={{ width: 60, height: 60, mr: 1 }}
+              style={{ marginRight: 18, marginLeft: 8 }}
+            />
+            {/* Pose-AI */}
+          </Typography>
+        </Toolbar>
+      </AppBar>
       <Box
         sx={{
           background: 'radial-gradient(1200px 600px at 80% 10%, rgba(154, 72, 245, 0.14), transparent 60%), radial-gradient(800px 400px at 10% 90%, rgba(229, 57, 53, 0.14), transparent 70%), linear-gradient(135deg, rgba(106, 17, 203, 0.10) 0%, rgba(229, 57, 53, 0.10) 100%)',
@@ -86,6 +103,7 @@ const LandingPage: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           position: 'relative',
+          marginTop: '10vh',
           overflow: 'hidden',
           // Animated grid overlay
           '& .tech-grid': {
