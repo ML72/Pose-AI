@@ -14,7 +14,8 @@ import {
   Switch,
   ToggleButton,
   ToggleButtonGroup,
-  Typography
+  Typography,
+  CircularProgress
 } from '@mui/material';
 import {
   CloudUpload,
@@ -27,6 +28,8 @@ import {
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { setNewAlert } from '../service/alert';
+import { setUserPoseImage, setUserPoseKeypoints } from '../store/slices/data';
+import { estimateKeypointsWithBlazePose, convertImageToBase64 } from '../service/blazePose';
 
 const genres = [
   'Portrait', 'Full Body', 'Editorial', 'Fitness', 'Street', 'Fashion', 'Studio'
@@ -44,6 +47,7 @@ const UploadPosePage: React.FC = () => {
   const [selectedFocus, setSelectedFocus] = React.useState<string[]>(['Posture', 'Symmetry']);
   const [highQuality, setHighQuality] = React.useState<boolean>(true);
   const [mode, setMode] = React.useState<'Casual' | 'Formal'>('Casual');
+  const [isAnalyzing, setIsAnalyzing] = React.useState<boolean>(false);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
   // Cleanup object URL
@@ -76,16 +80,45 @@ const UploadPosePage: React.FC = () => {
     }
   };
 
-  const onAnalyze = () => {
+  const onAnalyze = async () => {
     if (!file) {
       setNewAlert(dispatch, { msg: 'Please upload an image first', alertType: 'warning' });
       return;
     }
-    // Basic stub logic – wire up later to actual analysis
-    setNewAlert(dispatch, { msg: 'Image queued for analysis…', alertType: 'success' });
+
+    setIsAnalyzing(true);
+    
     try {
-  history.push('/results', { userImageUrl: previewUrl, fileName: file?.name });
-    } catch {}
+      // Convert image to base64
+      const base64Image = await convertImageToBase64(file);
+      
+      // Create an image element for pose detection
+      const img = new Image();
+      img.src = previewUrl!;
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      
+      // Run pose detection with BlazePose
+      const keypoints = await estimateKeypointsWithBlazePose(img);
+      
+      // Save to Redux store
+      dispatch(setUserPoseImage(base64Image));
+      dispatch(setUserPoseKeypoints(keypoints));
+      
+      setNewAlert(dispatch, { msg: 'Pose analysis completed successfully!', alertType: 'success' });
+      
+      // Navigate to results page
+      history.push('/results', { userImageUrl: previewUrl, fileName: file?.name });
+      
+    } catch (error) {
+      console.error('Error during pose analysis:', error);
+      setNewAlert(dispatch, { msg: 'Failed to analyze pose. Please try again.', alertType: 'error' });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -221,17 +254,17 @@ const UploadPosePage: React.FC = () => {
                     )}
 
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="flex-end">
-                      <Button variant="outlined" onClick={() => { setFile(null); setPreviewUrl(null); if (inputRef.current) inputRef.current.value = ""; }} disabled={!file}>
+                      <Button variant="outlined" onClick={() => { setFile(null); setPreviewUrl(null); if (inputRef.current) inputRef.current.value = ""; }} disabled={!file || isAnalyzing}>
                         Clear
                       </Button>
                       <Button
                         variant="contained"
-                        endIcon={<AutoAwesome />}
+                        endIcon={isAnalyzing ? <CircularProgress size={16} color="inherit" /> : <AutoAwesome />}
                         onClick={onAnalyze}
-                        disabled={!file}
+                        disabled={!file || isAnalyzing}
                         sx={{ px: 3 }}
                       >
-                        Analyze
+                        {isAnalyzing ? 'Analyzing...' : 'Analyze'}
                       </Button>
                     </Stack>
                   </Stack>

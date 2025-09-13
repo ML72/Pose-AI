@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation, useHistory } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   Box,
   Button,
@@ -15,6 +16,8 @@ import {
 } from '@mui/material';
 import { ArrowBack, AutoAwesome, Download, TipsAndUpdates } from '@mui/icons-material';
 import CustomPage from '../components/CustomPage';
+import KeypointVisualization from '../components/KeypointVisualization';
+import { selectUserPoseImage, selectUserPoseKeypoints } from '../store/slices/data';
 
 type LocationState = {
   userImageUrl?: string | null;
@@ -49,6 +52,13 @@ const ResultsPage: React.FC = () => {
   const location = useLocation<LocationState>();
   const userImageUrl = location.state?.userImageUrl ?? null;
   const fileName = location.state?.fileName ?? 'uploaded_photo.jpg';
+  
+  // Get pose data from Redux store
+  const userPoseImage = useSelector(selectUserPoseImage);
+  const userPoseKeypoints = useSelector(selectUserPoseKeypoints);
+  
+  // Use Redux image if available, fallback to location state
+  const displayImageUrl = userPoseImage || userImageUrl;
 
   // Placeholder editorial poses – reduced to two options
   const recommended = [
@@ -56,18 +66,57 @@ const ResultsPage: React.FC = () => {
     { id: 2, title: 'Editorial Pose B' }
   ];
 
-  // Basic stub metrics – swap for real analysis later
-  const metrics = [
-    { label: 'Posture', value: 'Good' },
-    { label: 'Symmetry', value: 'Medium' },
-    { label: 'Angles', value: 'Needs Work' }
-  ];
+  // Enhanced metrics based on keypoint data
+  const getMetrics = () => {
+    if (!userPoseKeypoints || !userPoseKeypoints.keypoints.length) {
+      return [
+        { label: 'Posture', value: 'Not analyzed' },
+        { label: 'Keypoints', value: 'Not detected' },
+        { label: 'Analysis', value: 'Upload required' }
+      ];
+    }
 
-  const tips = [
-    'Relax shoulders and elongate the neck for a cleaner silhouette.',
-    'Shift weight to one leg to create a natural S-curve.',
-    'Slightly angle chin down and towards the camera for definition.',
-  ];
+    const validKeypoints = userPoseKeypoints.keypoints.filter(kp => kp.score > 0.5);
+    const avgConfidence = validKeypoints.length > 0 
+      ? (validKeypoints.reduce((sum, kp) => sum + kp.score, 0) / validKeypoints.length * 100).toFixed(0)
+      : '0';
+
+    return [
+      { label: 'Keypoints Detected', value: `${validKeypoints.length}/33` },
+      { label: 'Confidence', value: `${avgConfidence}%` },
+      { label: 'Model', value: 'BlazePose' }
+    ];
+  };
+
+  const metrics = getMetrics();
+
+  // Enhanced tips based on pose analysis
+  const getTips = () => {
+    if (!userPoseKeypoints || !userPoseKeypoints.keypoints.length) {
+      return [
+        'Upload an image to get personalized pose analysis.',
+        'Make sure your full body is visible in the photo.',
+        'Use good lighting for better keypoint detection.'
+      ];
+    }
+
+    const validKeypoints = userPoseKeypoints.keypoints.filter(kp => kp.score > 0.5);
+    const tips = [];
+
+    if (validKeypoints.length < 20) {
+      tips.push('Consider better lighting or a clearer pose for improved detection.');
+    } else {
+      tips.push('Great pose detection! Your keypoints are clearly visible.');
+    }
+
+    tips.push('Keypoint colors indicate detection confidence: red (high), orange (medium), yellow (low).');
+    tips.push('Green lines connect related body parts to show your pose structure.');
+    tips.push('Higher confidence scores indicate more reliable pose detection.');
+
+    return tips;
+  };
+
+  const tips = getTips();
 
   return (
     <CustomPage useBindingContainer={false}>
@@ -91,7 +140,12 @@ const ResultsPage: React.FC = () => {
               <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
                 <Chip label={`File: ${fileName || '—'}`} variant="outlined" size="small" />
                 <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
-                <Chip label="v0 Preview" color="secondary" variant="outlined" size="small" />
+                <Chip 
+                  label={userPoseKeypoints ? "Pose Analyzed" : "No Analysis"} 
+                  color={userPoseKeypoints ? "success" : "warning"} 
+                  variant="outlined" 
+                  size="small" 
+                />
               </Stack>
             </Stack>
 
@@ -112,10 +166,22 @@ const ResultsPage: React.FC = () => {
             <Box sx={{ p: 0.75, borderRadius: 3, background: 'primary.dark' }}>
               <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2.5, background: 'linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(252,248,255,0.92) 100%)', border: '1px solid rgba(106, 17, 203, 0.18)' }}>
                 <Stack spacing={1.5}>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>Your Photo</Typography>
-                  <Box sx={imgFrameSx}>
-                    {userImageUrl ? (
-                      <img src={userImageUrl} alt={fileName || 'uploaded'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>Your Photo with Pose Analysis</Typography>
+                  <Box sx={{ 
+                    ...imgFrameSx, 
+                    height: { xs: 320, sm: 400 }, 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 1
+                  }}>
+                    {displayImageUrl ? (
+                      <KeypointVisualization
+                        imageUrl={displayImageUrl}
+                        keypoints={userPoseKeypoints}
+                        maxWidth={460}
+                        maxHeight={380}
+                      />
                     ) : (
                       <Stack alignItems="center" justifyContent="center" sx={{ width: '100%', height: '100%' }}>
                         <Typography variant="body2" color="text.secondary">No image provided</Typography>
@@ -123,6 +189,34 @@ const ResultsPage: React.FC = () => {
                       </Stack>
                     )}
                   </Box>
+                  
+                  {userPoseKeypoints && (
+                    <Box sx={{ 
+                      mt: 1, 
+                      p: 1, 
+                      backgroundColor: 'rgba(106, 17, 203, 0.05)', 
+                      borderRadius: 1,
+                      border: '1px solid rgba(106, 17, 203, 0.1)'
+                    }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
+                        Pose Visualization Legend:
+                      </Typography>
+                      <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#ff0000' }} />
+                          <Typography variant="caption">High confidence</Typography>
+                        </Stack>
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#ff8000' }} />
+                          <Typography variant="caption">Medium confidence</Typography>
+                        </Stack>
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                          <Box sx={{ width: 12, height: 2, bgcolor: '#00ff00' }} />
+                          <Typography variant="caption">Body connections</Typography>
+                        </Stack>
+                      </Stack>
+                    </Box>
+                  )}
                 </Stack>
               </Paper>
             </Box>

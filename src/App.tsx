@@ -10,7 +10,7 @@ import { IonReactRouter } from '@ionic/react-router';
 import LandingPage from './pages/LandingPage';
 import UploadPosePage from './pages/UploadPosePage';
 import ResultsPage from './pages/ResultsPage';
-import PoseLandmarker from './components/PoseLandmarker';
+import ImageEditPage from './pages/ImageEditPage';
 
 /* Basic CSS for apps built with Ionic */
 import '@ionic/react/css/normalize.css';
@@ -47,9 +47,6 @@ const App: React.FC = () => {
           </Route>
           <Route exact path="/results">
             <ResultsPage />
-          </Route>
-          <Route exact path="/pose">
-            <PoseLandmarker />
           </Route>
         </IonRouterOutlet>
       </IonReactRouter>
