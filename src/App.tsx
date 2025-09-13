@@ -48,9 +48,6 @@ const App: React.FC = () => {
           <Route exact path="/results">
             <ResultsPage />
           </Route>
-          <Route exact path="/image-edit">
-            <ImageEditPage />
-          </Route>
         </IonRouterOutlet>
       </IonReactRouter>
     </IonApp>

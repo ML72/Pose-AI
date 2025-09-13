@@ -83,7 +83,7 @@ const UploadPosePage: React.FC = () => {
     // Basic stub logic – wire up later to actual analysis
     setNewAlert(dispatch, { msg: 'Image queued for analysis…', alertType: 'success' });
     try {
-      history.push('/results');
+  history.push('/results', { userImageUrl: previewUrl, fileName: file?.name });
     } catch {}
   };
 

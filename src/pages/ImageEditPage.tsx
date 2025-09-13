@@ -1,3 +1,6 @@
+// THIS PAGE SHOULD BE MERGED LATER
+// TODO DELETE THIS PAGE
+
 import React, { useState, useRef } from 'react';
 import {
   Button,
