@@ -7,7 +7,9 @@ import {
 import { IonReactRouter } from '@ionic/react-router';
 
 /* Your page imports */
-import Landing from './pages/Landing';
+import LandingPage from './pages/LandingPage';
+import UploadPosePage from './pages/UploadPosePage';
+import ResultsPage from './pages/ResultsPage';
 
 /* Basic CSS for apps built with Ionic */
 import '@ionic/react/css/normalize.css';
@@ -37,7 +39,13 @@ const App: React.FC = () => {
         <IonRouterOutlet>
           {/** Page routing here */}
           <Route exact path="/">
-            <Landing />
+            <LandingPage />
+          </Route>
+          <Route exact path="/upload">
+            <UploadPosePage />
+          </Route>
+          <Route exact path="/results">
+            <ResultsPage />
           </Route>
         </IonRouterOutlet>
       </IonReactRouter>
