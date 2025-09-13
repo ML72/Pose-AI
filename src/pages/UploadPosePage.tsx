@@ -28,8 +28,9 @@ import {
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { setNewAlert } from '../service/alert';
-import { setUserPoseImage, setUserPoseKeypoints } from '../store/slices/data';
+import { setUserPoseImage, setUserPoseKeypoints, setSimilarImageFilenames } from '../store/slices/data';
 import { estimateKeypointsWithBlazePose, convertImageToBase64 } from '../service/blazePose';
+import { findSimilarPoses } from '../utils/poseComparison';
 
 const genres = [
   'Portrait', 'Full Body', 'Editorial', 'Fitness', 'Street', 'Fashion', 'Studio'
@@ -104,9 +105,27 @@ const UploadPosePage: React.FC = () => {
       // Run pose detection with BlazePose
       const keypoints = await estimateKeypointsWithBlazePose(img);
       
-      // Save to Redux store
+      // Save keypoints to Redux store
       dispatch(setUserPoseImage(base64Image));
       dispatch(setUserPoseKeypoints(keypoints));
+      
+      // Load keypoints dataset and find similar poses
+      try {
+        const response = await fetch('/data/keypoints.json');
+        if (!response.ok) {
+          throw new Error('Failed to load keypoints dataset');
+        }
+        const keypointsDataset = await response.json();
+        
+        // Find top 2 similar poses
+        const similarFilenames = findSimilarPoses(keypoints.keypoints, keypointsDataset, 2);
+        dispatch(setSimilarImageFilenames(similarFilenames));
+        
+        console.log('Found similar poses:', similarFilenames);
+      } catch (datasetError) {
+        console.warn('Could not load pose comparison dataset:', datasetError);
+        // Continue without similar poses - this is not a critical failure
+      }
       
       setNewAlert(dispatch, { msg: 'Pose analysis completed successfully!', alertType: 'success' });
       

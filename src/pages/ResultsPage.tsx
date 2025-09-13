@@ -17,7 +17,7 @@ import {
 import { ArrowBack, AutoAwesome, Download, TipsAndUpdates } from '@mui/icons-material';
 import CustomPage from '../components/CustomPage';
 import KeypointVisualization from '../components/KeypointVisualization';
-import { selectUserPoseImage, selectUserPoseKeypoints } from '../store/slices/data';
+import { selectUserPoseImage, selectUserPoseKeypoints, selectSimilarImageFilenames } from '../store/slices/data';
 
 type LocationState = {
   userImageUrl?: string | null;
@@ -56,22 +56,26 @@ const ResultsPage: React.FC = () => {
   // Get pose data from Redux store
   const userPoseImage = useSelector(selectUserPoseImage);
   const userPoseKeypoints = useSelector(selectUserPoseKeypoints);
+  const similarImageFilenames = useSelector(selectSimilarImageFilenames);
   
   // Use Redux image if available, fallback to location state
   const displayImageUrl = userPoseImage || userImageUrl;
 
-  // Placeholder editorial poses – reduced to two options
-  const recommended = [
-    { id: 1, title: 'Editorial Pose A' },
-    { id: 2, title: 'Editorial Pose B' }
+  // Use similar poses from Redux or fallback to placeholder
+  const recommended = similarImageFilenames.length >= 2 ? [
+    { id: 1, title: 'Best Match', filename: similarImageFilenames[0] },
+    { id: 2, title: 'Second Match', filename: similarImageFilenames[1] }
+  ] : [
+    { id: 1, title: 'Editorial Pose A', filename: null },
+    { id: 2, title: 'Editorial Pose B', filename: null }
   ];
 
   // Enhanced metrics based on keypoint data
   const getMetrics = () => {
     if (!userPoseKeypoints || !userPoseKeypoints.keypoints.length) {
       return [
-        { label: 'Posture', value: 'Not analyzed' },
-        { label: 'Keypoints', value: 'Not detected' },
+        { label: 'Posture', value: 'N/A' },
+        { label: 'Keypoints', value: 'N/A' },
         { label: 'Analysis', value: 'Upload required' }
       ];
     }
@@ -249,9 +253,7 @@ const ResultsPage: React.FC = () => {
                     ))}
                   </Stack>
 
-                  <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
-                    <Button variant="outlined" startIcon={<Download />}>Download Report</Button>
-                  </Stack>
+                  {/* Download Report button removed per request */}
                 </Stack>
               </Paper>
             </Box>
@@ -273,7 +275,12 @@ const ResultsPage: React.FC = () => {
             >
               Recommended Poses
             </Typography>
-            <Typography variant="body2" color="text.secondary">Two curated editorial options based on your photo. Each shows a reference and your photo adapted to match.</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {similarImageFilenames.length >= 2 
+                ? 'AI-matched reference poses based on similarity analysis of your keypoints.'
+                : 'Two curated editorial options based on your photo. Each shows a reference and your photo adapted to match.'
+              }
+            </Typography>
           </Stack>
 
           <Grid container spacing={3}>
@@ -284,13 +291,52 @@ const ResultsPage: React.FC = () => {
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>{pose.title}</Typography>
                     <Grid container spacing={1.5}>
                       <Grid item xs={6}>
-                        <Box sx={{ ...grayBoxSx, height: 160 }}>
-                          <Typography variant="caption" color="text.secondary">Reference</Typography>
+                        <Box sx={{ ...grayBoxSx, height: 220, padding: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {pose.filename ? (
+                            <Box sx={{
+                              width: '100%',
+                              height: '100%',
+                              borderRadius: 2,
+                              overflow: 'hidden',
+                              boxShadow: '0 6px 18px rgba(0,0,0,0.06)',
+                              backgroundColor: 'transparent',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              p: 0
+                            }}>
+                              <img
+                                src={`/data/images/${pose.filename}`}
+                                alt="Reference pose"
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  display: 'block'
+                                }}
+                              />
+                            </Box>
+                          ) : (
+                            <Typography variant="caption" color="text.secondary">Reference</Typography>
+                          )}
                         </Box>
                       </Grid>
                       <Grid item xs={6}>
-                        <Box sx={{ ...grayBoxSx, height: 160 }}>
-                          <Typography variant="caption" color="text.secondary">Edited</Typography>
+                        <Box sx={{ ...grayBoxSx, height: 220, padding: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Box sx={{
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                            boxShadow: '0 6px 18px rgba(0,0,0,0.04)',
+                            backgroundColor: 'transparent',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            p: 0
+                          }}>
+                            <Typography variant="caption" color="text.secondary">Edited</Typography>
+                          </Box>
                         </Box>
                       </Grid>
                     </Grid>
@@ -298,10 +344,7 @@ const ResultsPage: React.FC = () => {
                       <Chip size="small" label="Natural" variant="outlined" />
                       <Chip size="small" label="Balanced" variant="outlined" />
                     </Stack>
-                    <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1.5 }}>
-                      <Button size="small" variant="outlined">Details</Button>
-                      <Button size="small" variant="contained">Apply</Button>
-                    </Stack>
+                    {/* Buttons removed as requested */}
                   </CardContent>
                 </Card>
               </Grid>
