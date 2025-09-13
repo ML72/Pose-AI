@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useHistory } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
   Button,
@@ -17,7 +17,9 @@ import {
 import { ArrowBack, AutoAwesome, Download, TipsAndUpdates } from '@mui/icons-material';
 import CustomPage from '../components/CustomPage';
 import KeypointVisualization from '../components/KeypointVisualization';
-import { selectUserPoseImage, selectUserPoseKeypoints, selectSimilarImageFilenames } from '../store/slices/data';
+import { selectUserPoseImage, selectUserPoseKeypoints, selectSimilarImageFilenames, selectDesiredStyle, selectPrioritizedAreas, selectOutputMode, selectImprovementSuggestions, setImprovementSuggestions } from '../store/slices/data';
+import { analyzePoses } from '../service/poseSuggestions';
+import { Skeleton } from '@mui/material';
 
 type LocationState = {
   userImageUrl?: string | null;
@@ -50,6 +52,7 @@ const imgFrameSx = {
 const ResultsPage: React.FC = () => {
   const history = useHistory();
   const location = useLocation<LocationState>();
+  const dispatch = useDispatch();
   const userImageUrl = location.state?.userImageUrl ?? null;
   const fileName = location.state?.fileName ?? 'uploaded_photo.jpg';
   
@@ -57,6 +60,11 @@ const ResultsPage: React.FC = () => {
   const userPoseImage = useSelector(selectUserPoseImage);
   const userPoseKeypoints = useSelector(selectUserPoseKeypoints);
   const similarImageFilenames = useSelector(selectSimilarImageFilenames);
+  const desiredStyle = useSelector(selectDesiredStyle);
+  const prioritizedAreas = useSelector(selectPrioritizedAreas);
+  const outputMode = useSelector(selectOutputMode);
+  const improvementSuggestions = useSelector(selectImprovementSuggestions);
+  const [loadingSuggestions, setLoadingSuggestions] = React.useState<boolean>(true);
   
   // Use Redux image if available, fallback to location state
   const displayImageUrl = userPoseImage || userImageUrl;
@@ -122,41 +130,109 @@ const ResultsPage: React.FC = () => {
 
   const tips = getTips();
 
+  // Helper to fetch a public image and convert to base64 data URL
+  const fetchImageAsDataUrl = async (relativePath: string): Promise<string> => {
+    const res = await fetch(relativePath);
+    if (!res.ok) throw new Error(`Failed to fetch ${relativePath}`);
+    const blob = await res.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Failed to read image blob'));
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  // Kick off pose suggestions on load
+  React.useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      // Start with skeleton state
+      setLoadingSuggestions(true);
+      // Preconditions: need user image and two reference filenames
+      const hasUserImage = !!(userPoseImage || userImageUrl);
+      const hasTwoRefs = similarImageFilenames && similarImageFilenames.length >= 2;
+      if (!hasUserImage || !hasTwoRefs) {
+        setLoadingSuggestions(false);
+        return;
+      }
+
+      try {
+        const ref1Path = `/data/images/${similarImageFilenames[0]}`;
+        const ref2Path = `/data/images/${similarImageFilenames[1]}`;
+        const [ref1, ref2] = await Promise.all([
+          fetchImageAsDataUrl(ref1Path),
+          fetchImageAsDataUrl(ref2Path)
+        ]);
+
+        const original = userPoseImage || userImageUrl!;
+        const response = await analyzePoses({
+          originalImage: original,
+          referenceImage1: ref1,
+          referenceImage2: ref2,
+          desiredStyle: desiredStyle || [],
+          prioritizedAreas: prioritizedAreas || [],
+          outputMode: outputMode || 'Casual'
+        });
+
+        if (!cancelled) {
+          if (response.success) {
+            const bullets: string[] = [];
+            if (response.overallFeedback) bullets.push(response.overallFeedback);
+            if (response.suggestedImprovements) bullets.push(response.suggestedImprovements);
+            if (response.poseChanges && response.poseChanges.length) {
+              response.poseChanges.slice(0, 4).forEach((pc) => {
+                bullets.push(`Ref ${pc.referenceImage}: ${pc.changeDescription} — ${pc.benefit}`);
+              });
+            }
+            dispatch(setImprovementSuggestions(bullets));
+          } else {
+            dispatch(setImprovementSuggestions([response.error || 'Failed to retrieve suggestions.']));
+          }
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          dispatch(setImprovementSuggestions(['Could not fetch AI suggestions at this time.']))
+        }
+      } finally {
+        if (!cancelled) setLoadingSuggestions(false);
+      }
+    };
+
+    run();
+    return () => { cancelled = true; };
+    // Re-run if inputs change significantly
+  }, [userPoseImage, userImageUrl, similarImageFilenames, desiredStyle, prioritizedAreas, outputMode, dispatch]);
+
   return (
     <CustomPage useBindingContainer={false}>
       {/* Header / Hero-lite */}
       <Box sx={{ py: { xs: 3, sm: 5 } }}>
         <Container maxWidth="lg" sx={{ position: 'relative' }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
-            <Stack spacing={1}>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                }}
-              >
-                Analysis Results
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                <Chip label={`File: ${fileName || '—'}`} variant="outlined" size="small" />
-                <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
-                <Chip 
-                  label={userPoseKeypoints ? "Pose Analyzed" : "No Analysis"} 
-                  color={userPoseKeypoints ? "success" : "warning"} 
-                  variant="outlined" 
-                  size="small" 
-                />
-              </Stack>
-            </Stack>
-
-            <Stack direction="row" spacing={1}>
+            <Stack spacing={2} alignItems="flex-start">
               <Button startIcon={<ArrowBack />} variant="text" onClick={() => history.push('/upload')}>
                 Back
               </Button>
+              <Stack direction="column" spacing={2} width={'100%'} style={{ marginTop: 30 }}>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}
+                >
+                  Analysis Results
+                </Typography>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', marginLeft: 'auto' }}>
+                  <Chip label={`File: ${fileName || '—'}`} variant="outlined" size="small" />
+                  <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
+                  <Chip label="v0 Preview" color="secondary" variant="outlined" size="small" />
+                </Stack>
+              </Stack>
             </Stack>
           </Stack>
         </Container>
@@ -244,14 +320,80 @@ const ResultsPage: React.FC = () => {
 
                   <Divider />
 
-                  <Stack spacing={1}>
-                    {tips.map((t, i) => (
-                      <Stack key={i} direction="row" spacing={1} alignItems="flex-start">
-                        <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'primary.main', mt: '10px' }} />
-                        <Typography variant="body2" color="text.secondary">{t}</Typography>
-                      </Stack>
-                    ))}
-                  </Stack>
+                  {/* Use a semantic list so we can precisely control bullet placement with CSS ::before */}
+                  <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0, '& li': { mb: 1 } }}>
+                    {loadingSuggestions ? (
+                      [1,2,3,4].map((i) => (
+                        <Box
+                          component="li"
+                          key={i}
+                          sx={{
+                            position: 'relative',
+                            pl: '1.1em',
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              left: 0,
+                              // position bullet relative to the first line of text
+                              top: '0.28em',
+                              width: '0.55em',
+                              height: '0.55em',
+                              borderRadius: '50%',
+                              bgcolor: 'primary.main'
+                            }
+                          }}
+                        >
+                          <Skeleton variant="text" width="85%" height={18} />
+                        </Box>
+                      ))
+                    ) : improvementSuggestions && improvementSuggestions.length ? (
+                      improvementSuggestions.map((t, i) => (
+                        <Box
+                          component="li"
+                          key={i}
+                          sx={{
+                            position: 'relative',
+                            pl: '1.15em',
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              left: 0,
+                              top: '0.28em',
+                              width: '0.55em',
+                              height: '0.55em',
+                              borderRadius: '50%',
+                              bgcolor: 'primary.main'
+                            }
+                          }}
+                        >
+                          <Typography variant="body2" color="text.secondary">{t}</Typography>
+                        </Box>
+                      ))
+                    ) : (
+                      tips.map((t, i) => (
+                        <Box
+                          component="li"
+                          key={i}
+                          sx={{
+                            position: 'relative',
+                            pl: '1.15em',
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              left: 0,
+                              top: '0.28em',
+                              width: '0.55em',
+                              height: '0.55em',
+                              borderRadius: '50%',
+                              bgcolor: 'primary.main'
+                            }
+                          }}
+                        >
+                          <Typography variant="body2" color="text.secondary">{t}</Typography>
+                        </Box>
+                      ))
+                    )}
+                  </Box>
 
                   {/* Download Report button removed per request */}
                 </Stack>

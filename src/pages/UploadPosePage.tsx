@@ -28,7 +28,7 @@ import {
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { setNewAlert } from '../service/alert';
-import { setUserPoseImage, setUserPoseKeypoints, setSimilarImageFilenames } from '../store/slices/data';
+import { setUserPoseImage, setUserPoseKeypoints, setSimilarImageFilenames, setDesiredStyle, setPrioritizedAreas, setOutputMode } from '../store/slices/data';
 import { estimateKeypointsWithBlazePose, convertImageToBase64 } from '../service/blazePose';
 import { findSimilarPoses } from '../utils/poseComparison';
 
@@ -57,6 +57,14 @@ const UploadPosePage: React.FC = () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
+
+  // Keep Redux in sync with selections so Results page can use them
+  React.useEffect(() => {
+    // Dispatch current selections whenever they change
+    dispatch(setDesiredStyle(selectedGenres));
+    dispatch(setPrioritizedAreas(selectedFocus));
+    dispatch(setOutputMode(mode));
+  }, [dispatch, selectedGenres, selectedFocus, mode]);
 
   const handlePickClick = () => inputRef.current?.click();
 
@@ -88,27 +96,27 @@ const UploadPosePage: React.FC = () => {
     }
 
     setIsAnalyzing(true);
-    
+
     try {
       // Convert image to base64
       const base64Image = await convertImageToBase64(file);
-      
+
       // Create an image element for pose detection
       const img = new Image();
       img.src = previewUrl!;
-      
+
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = reject;
       });
-      
+
       // Run pose detection with BlazePose
       const keypoints = await estimateKeypointsWithBlazePose(img);
-      
+
       // Save keypoints to Redux store
       dispatch(setUserPoseImage(base64Image));
       dispatch(setUserPoseKeypoints(keypoints));
-      
+
       // Load keypoints dataset and find similar poses
       try {
         const response = await fetch('/data/keypoints.json');
@@ -116,22 +124,22 @@ const UploadPosePage: React.FC = () => {
           throw new Error('Failed to load keypoints dataset');
         }
         const keypointsDataset = await response.json();
-        
+
         // Find top 2 similar poses
         const similarFilenames = findSimilarPoses(keypoints.keypoints, keypointsDataset, 2);
         dispatch(setSimilarImageFilenames(similarFilenames));
-        
+
         console.log('Found similar poses:', similarFilenames);
       } catch (datasetError) {
         console.warn('Could not load pose comparison dataset:', datasetError);
         // Continue without similar poses - this is not a critical failure
       }
-      
+
       setNewAlert(dispatch, { msg: 'Pose analysis completed successfully!', alertType: 'success' });
-      
+
       // Navigate to results page
       history.push('/results', { userImageUrl: previewUrl, fileName: file?.name });
-      
+
     } catch (error) {
       console.error('Error during pose analysis:', error);
       setNewAlert(dispatch, { msg: 'Failed to analyze pose. Please try again.', alertType: 'error' });
@@ -142,44 +150,70 @@ const UploadPosePage: React.FC = () => {
 
   return (
     <CustomPage useBindingContainer={false}>
-      {/* Hero-ish banner matching Landing vibe */}
       <Box
         sx={{
           py: { xs: 3, sm: 5 },
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          // animation: 'slideOut 0.5s ease-in-out'
         }}
       >
-        {/* Removed grid and gradient overlays for plain white background */}
-        <Container maxWidth="lg" sx={{ position: 'relative' }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" sx={{ mb: 2 }}>
-            <Stack spacing={1}>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                }}
-              >
-                Upload your photo
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                <Chip label="Choose an image" variant="outlined" size="small" />
-                <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
-              </Stack>
-            </Stack>
+        <style>
+          {`
+            @keyframes slideIn {
+              0% {
+                opacity: 0;
+                transform: translateX(100%);
+              }
+              100% {
+                opacity: 1;
+                transform: translateX(0);
+              }
+            }
 
-            <Stack direction="row" spacing={1}>
-              <Button startIcon={<ArrowBack />} variant="text" onClick={() => history.push('/')}>Back</Button>
-            </Stack>
-          </Stack>
-
-          <Grid container spacing={4} alignItems="stretch">
+            @keyframes slideOut {
+              0% {
+                opacity: 1;
+                transform: translateX(0);
+              }
+              100% {
+                opacity: 0;
+                transform: translateX(-100%);
+              }
+            }
+          `}
+        </style>
+        <Container maxWidth="lg" sx={{ position: 'relative' }} >
+          <Grid container spacing={2} alignItems="center" justifyContent="space-between">
             {/* Uploader Card */}
-            <Grid item xs={12} md={7}>
+            <Grid direction={{ xs: 'column' }} item xs={12} md={6} alignItems={{ xs: 'flex-start' }}>
+              <Stack direction={{ xs: 'column' }} spacing={2} alignItems={{ xs: 'flex-start'}} justifyContent="space-between" sx={{ mb: 2 }}>
+                <Stack direction="row" spacing={1}>
+                  <Button startIcon={<ArrowBack />} variant="text" onClick={() => history.push('/')}>Back</Button>
+                </Stack>
+                <Stack spacing={1}>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }}
+                  >
+                    Upload your photo
+                  </Typography>
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                    <Chip label="Choose an image" variant="outlined" size="small" />
+                    <Chip label="Mode: Auto" color="primary" variant="outlined" size="small" />
+                  </Stack>
+                </Stack>
+              </Stack>
               <Box sx={{ p: 0.75, borderRadius: 3, background: 'primary.dark' }}>
                 <Paper
                   elevation={0}
@@ -273,17 +307,17 @@ const UploadPosePage: React.FC = () => {
                     )}
 
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="flex-end">
-                      <Button variant="outlined" onClick={() => { setFile(null); setPreviewUrl(null); if (inputRef.current) inputRef.current.value = ""; }} disabled={!file || isAnalyzing}>
+                      <Button variant="outlined" onClick={() => { setFile(null); setPreviewUrl(null); if (inputRef.current) inputRef.current.value = ""; }} disabled={!file}>
                         Clear
                       </Button>
                       <Button
                         variant="contained"
-                        endIcon={isAnalyzing ? <CircularProgress size={16} color="inherit" /> : <AutoAwesome />}
+                        endIcon={<AutoAwesome />}
                         onClick={onAnalyze}
-                        disabled={!file || isAnalyzing}
+                        disabled={!file}
                         sx={{ px: 3 }}
                       >
-                        {isAnalyzing ? 'Analyzing...' : 'Analyze'}
+                        Analyze
                       </Button>
                     </Stack>
                   </Stack>
@@ -291,8 +325,8 @@ const UploadPosePage: React.FC = () => {
               </Box>
             </Grid>
 
-            {/* Options Card */}
-            <Grid item xs={12} md={5}>
+            {/* Right Side */}
+            <Grid item xs={12} md={6}>
               <Box sx={{ p: 0.75, borderRadius: 3, background: 'secondary.dark' }}>
                 <Paper
                   elevation={0}
@@ -311,7 +345,6 @@ const UploadPosePage: React.FC = () => {
                       </Typography>
                     </Stack>
 
-                    {/* Mode Option - moved below header */}
                     <Box>
                       <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                         Mode
@@ -323,13 +356,16 @@ const UploadPosePage: React.FC = () => {
                             label={m}
                             color={mode === m ? 'primary' : 'default'}
                             variant={mode === m ? 'filled' : 'outlined'}
-                            onClick={() => setMode(m as 'Casual' | 'Formal')}
+                            onClick={() => {
+                              setMode(m as 'Casual' | 'Formal');
+                              // mirror selection to Redux
+                              dispatch(setOutputMode(m));
+                            }}
                           />
                         ))}
                       </Stack>
                     </Box>
 
-                    {/* Genres */}
                     <Box>
                       <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                         Desired Style
@@ -343,11 +379,13 @@ const UploadPosePage: React.FC = () => {
                               label={g}
                               color={selected ? 'primary' : 'default'}
                               variant={selected ? 'filled' : 'outlined'}
-                              onClick={() =>
-                                setSelectedGenres((prev) =>
-                                  prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]
-                                )
-                              }
+                              onClick={() => {
+                                setSelectedGenres((prev) => {
+                                  const next = prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g];
+                                  dispatch(setDesiredStyle(next));
+                                  return next;
+                                });
+                              }}
                               sx={{ mb: 1 }}
                             />
                           );
@@ -355,7 +393,6 @@ const UploadPosePage: React.FC = () => {
                       </Stack>
                     </Box>
 
-                    {/* Focus Areas */}
                     <Box>
                       <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                         What to prioritize
@@ -369,11 +406,13 @@ const UploadPosePage: React.FC = () => {
                               label={f}
                               color={selected ? 'secondary' : 'default'}
                               variant={selected ? 'filled' : 'outlined'}
-                              onClick={() =>
-                                setSelectedFocus((prev) =>
-                                  prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]
-                                )
-                              }
+                              onClick={() => {
+                                setSelectedFocus((prev) => {
+                                  const next = prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f];
+                                  dispatch(setPrioritizedAreas(next));
+                                  return next;
+                                });
+                              }}
                               sx={{ mb: 1 }}
                             />
                           );

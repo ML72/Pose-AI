@@ -45,9 +45,10 @@ Please analyze the original pose and the two reference poses. Provide detailed f
 `;
 
 export interface PoseSuggestionRequest {
-  originalImage: File;
-  referenceImage1: File;
-  referenceImage2: File;
+  // Images provided as base64 data URLs or raw base64 strings
+  originalImage: string;
+  referenceImage1: string;
+  referenceImage2: string;
   desiredStyle: string[];
   prioritizedAreas: string[];
   outputMode: string;
@@ -114,19 +115,18 @@ const poseAnalysisSchema = {
 };
 
 /**
- * Convert File to base64 string
+ * Extract mime type and base64 payload from a data URL or raw base64 string
  */
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      // Remove the data:image/jpeg;base64, prefix
-      resolve(base64.split(',')[1]);
-    };
-    reader.onerror = (error) => reject(error);
-  });
+const extractMimeAndBase64 = (input: string): { mime: string; base64: string } => {
+  if (!input) return { mime: 'image/jpeg', base64: '' };
+  if (input.startsWith('data:')) {
+    const [header, payload] = input.split(',', 2);
+    const mimeMatch = header.match(/^data:([^;]+);base64$/i);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    return { mime, base64: payload || '' };
+  }
+  // Assume raw base64 string; default to jpeg
+  return { mime: 'image/jpeg', base64: input };
 };
 
 /**
@@ -148,37 +148,10 @@ export const analyzePoses = async ({
         error: 'All three images (original and two references) are required'
       };
     }
-
-    // Check file types
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-    const images = [originalImage, referenceImage1, referenceImage2];
-    
-    for (const image of images) {
-      if (!allowedTypes.includes(image.type)) {
-        return {
-          success: false,
-          error: 'Only PNG, JPEG, JPG, and WebP images are supported'
-        };
-      }
-    }
-
-    // Check file sizes (Claude has limits)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    for (const image of images) {
-      if (image.size > maxSize) {
-        return {
-          success: false,
-          error: 'Images must be smaller than 5MB each'
-        };
-      }
-    }
-
-    // Convert images to base64
-    const [originalB64, reference1B64, reference2B64] = await Promise.all([
-      fileToBase64(originalImage),
-      fileToBase64(referenceImage1),
-      fileToBase64(referenceImage2)
-    ]);
+    // Extract base64 and mime from inputs
+    const orig = extractMimeAndBase64(originalImage);
+    const ref1 = extractMimeAndBase64(referenceImage1);
+    const ref2 = extractMimeAndBase64(referenceImage2);
 
     const prompt = POSE_ANALYSIS_PROMPT.replace('DESIRED_STYLE', desiredStyle.join(', and ')).replace('PRIORITIZED_AREAS', prioritizedAreas.join(', and ')).replace('OUTPUT_MODE', outputMode);
     
@@ -197,21 +170,21 @@ export const analyzePoses = async ({
             {
               type: 'image_url',
               image_url: {
-                url: `data:${originalImage.type};base64,${originalB64}`,
+                url: `data:${orig.mime};base64,${orig.base64}`,
                 detail: 'high'
               }
             },
             {
               type: 'image_url',
               image_url: {
-                url: `data:${referenceImage1.type};base64,${reference1B64}`,
+                url: `data:${ref1.mime};base64,${ref1.base64}`,
                 detail: 'high'
               }
             },
             {
               type: 'image_url',
               image_url: {
-                url: `data:${referenceImage2.type};base64,${reference2B64}`,
+                url: `data:${ref2.mime};base64,${ref2.base64}`,
                 detail: 'high'
               }
             }

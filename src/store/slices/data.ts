@@ -7,6 +7,9 @@ export interface DataState {
     similarImageFilenames: string[];
     editedImages: string[];
     improvementSuggestions: string[];
+    desiredStyle: string[]; // selections from upload page
+    prioritizedAreas: string[]; // selections from upload page
+    outputMode: string; // e.g., 'Casual' | 'Formal'
 }
 
 const initialState: DataState = {
@@ -14,7 +17,10 @@ const initialState: DataState = {
     userPoseKeypoints: null,
     similarImageFilenames: [],
     editedImages: [],
-    improvementSuggestions: []
+    improvementSuggestions: [],
+    desiredStyle: [],
+    prioritizedAreas: [],
+    outputMode: 'Casual'
 };
 
 export const dataSlice = createSlice({
@@ -61,6 +67,15 @@ export const dataSlice = createSlice({
         clearEditedImages: (state) => {
             state.editedImages = [];
         },
+        setDesiredStyle: (state, action: PayloadAction<string[]>) => {
+            state.desiredStyle = action.payload;
+        },
+        setPrioritizedAreas: (state, action: PayloadAction<string[]>) => {
+            state.prioritizedAreas = action.payload;
+        },
+        setOutputMode: (state, action: PayloadAction<string>) => {
+            state.outputMode = action.payload;
+        },
         setImprovementSuggestions: (state, action: PayloadAction<string[]>) => {
             state.improvementSuggestions = action.payload;
         },
@@ -81,6 +96,9 @@ export const dataSlice = createSlice({
             state.similarImageFilenames = [];
             state.editedImages = [];
             state.improvementSuggestions = [];
+            state.desiredStyle = [];
+            state.prioritizedAreas = [];
+            state.outputMode = 'Casual';
         }
     }
 });
@@ -98,6 +116,9 @@ export const {
     addEditedImage,
     removeEditedImage,
     clearEditedImages,
+    setDesiredStyle,
+    setPrioritizedAreas,
+    setOutputMode,
     setImprovementSuggestions,
     addImprovementSuggestion,
     removeImprovementSuggestion,
@@ -111,6 +132,9 @@ export const selectUserPoseKeypoints = (state: { data: DataState }) => state.dat
 export const selectSimilarImageFilenames = (state: { data: DataState }) => state.data.similarImageFilenames;
 export const selectEditedImages = (state: { data: DataState }) => state.data.editedImages;
 export const selectImprovementSuggestions = (state: { data: DataState }) => state.data.improvementSuggestions;
+export const selectDesiredStyle = (state: { data: DataState }) => state.data.desiredStyle;
+export const selectPrioritizedAreas = (state: { data: DataState }) => state.data.prioritizedAreas;
+export const selectOutputMode = (state: { data: DataState }) => state.data.outputMode;
 export const selectAllData = (state: { data: DataState }) => state.data;
 
 export default dataSlice.reducer;
