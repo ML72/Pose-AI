@@ -35,12 +35,21 @@ const POSE_ANALYSIS_PROMPT = `You are an expert pose analyst instructor. I will 
 1. An original image of a person in a pose
 2. Two reference images showing suggested poses for the original pose
 
-Please analyze the original pose and the two reference poses. Provide detailed feedback comparing the original pose with the reference poses. Be encouraging but specific in your feedback.`;
+Instructions:
+The user wants the desired style of the pose of DESIRED_STYLE.
+Prioritize feedback on PRIORITIZED_AREAS.
+The language should be more OUTPUT_MODE.
+
+Please analyze the original pose and the two reference poses. Provide detailed feedback comparing the original pose with the reference poses. Be encouraging but specific in your feedback.
+`;
 
 export interface PoseSuggestionRequest {
   originalImage: File;
   referenceImage1: File;
   referenceImage2: File;
+  desiredStyle: string[];
+  prioritizedAreas: string[];
+  outputMode: string;
 }
 
 export interface PoseChange {
@@ -125,7 +134,10 @@ const fileToBase64 = (file: File): Promise<string> => {
 export const analyzePoses = async ({
   originalImage,
   referenceImage1,
-  referenceImage2
+  referenceImage2,
+  desiredStyle,
+  prioritizedAreas,
+  outputMode
 }: PoseSuggestionRequest): Promise<PoseSuggestionResponse> => {
   try {
     // Validate input files
@@ -167,6 +179,8 @@ export const analyzePoses = async ({
       fileToBase64(referenceImage2)
     ]);
 
+    const prompt = POSE_ANALYSIS_PROMPT.replace('DESIRED_STYLE', desiredStyle.join(', and ')).replace('PRIORITIZED_AREAS', prioritizedAreas.join(', and ')).replace('OUTPUT_MODE', outputMode);
+    
     // Prepare the message with images using structured output
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-2024-08-06',
@@ -177,7 +191,7 @@ export const analyzePoses = async ({
           content: [
             {
               type: 'text',
-              text: POSE_ANALYSIS_PROMPT
+              text: prompt
             },
             {
               type: 'image_url',
