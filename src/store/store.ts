@@ -11,7 +11,7 @@ const combinedReducer = combineReducers({
 });
 
 const persistConfig = {
-  key: 'template-app-root',
+  key: 'pose-ai-root',
   whitelist: [],
   storage
 }
