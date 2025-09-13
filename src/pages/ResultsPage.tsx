@@ -149,6 +149,13 @@ const ResultsPage: React.FC = () => {
     const run = async () => {
       // Start with skeleton state
       setLoadingSuggestions(true);
+      
+      // If we already have improvement suggestions, skip the API call
+      if (improvementSuggestions && improvementSuggestions.length > 0) {
+        setLoadingSuggestions(false);
+        return;
+      }
+      
       // Preconditions: need user image and two reference filenames
       const hasUserImage = !!(userPoseImage || userImageUrl);
       const hasTwoRefs = similarImageFilenames && similarImageFilenames.length >= 2;
@@ -202,7 +209,7 @@ const ResultsPage: React.FC = () => {
     run();
     return () => { cancelled = true; };
     // Re-run if inputs change significantly
-  }, [userPoseImage, userImageUrl, similarImageFilenames, desiredStyle, prioritizedAreas, outputMode, dispatch]);
+  }, [userPoseImage, userImageUrl, similarImageFilenames, desiredStyle, prioritizedAreas, outputMode, improvementSuggestions, dispatch]);
 
   return (
     <CustomPage useBindingContainer={false}>
