@@ -17,9 +17,10 @@ import {
 import { ArrowBack, AutoAwesome, Download, TipsAndUpdates } from '@mui/icons-material';
 import CustomPage from '../components/CustomPage';
 import KeypointVisualization from '../components/KeypointVisualization';
-import { selectUserPoseImage, selectUserPoseKeypoints, selectSimilarImageFilenames, selectDesiredStyle, selectPrioritizedAreas, selectOutputMode, selectImprovementSuggestions, setImprovementSuggestions } from '../store/slices/data';
+import { selectUserPoseImage, selectUserPoseKeypoints, selectSimilarImageFilenames, selectDesiredStyle, selectPrioritizedAreas, selectOutputMode, selectImprovementSuggestions, setImprovementSuggestions, selectEditedImages, setEditedImages } from '../store/slices/data';
 import { analyzePoses } from '../service/poseSuggestions';
 import { Skeleton } from '@mui/material';
+import { editImages } from '../service/imageEdit';
 
 type LocationState = {
   userImageUrl?: string | null;
@@ -49,6 +50,21 @@ const imgFrameSx = {
   border: '1px solid rgba(106, 17, 203, 0.25)'
 } as const;
 
+// Style for recommended pose images to match user photo display
+const recommendedPoseFrameSx = {
+  position: 'relative',
+  width: '100%',
+  height: { xs: 200, sm: 240 }, // Slightly smaller than main user photo but maintains aspect ratio
+  borderRadius: 2.5,
+  overflow: 'hidden',
+  background: 'linear-gradient(180deg, rgba(106,17,203,0.06), rgba(229,57,53,0.06))',
+  border: '1px solid rgba(106, 17, 203, 0.25)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 1
+} as const;
+
 const ResultsPage: React.FC = () => {
   const history = useHistory();
   const location = useLocation<LocationState>();
@@ -64,7 +80,9 @@ const ResultsPage: React.FC = () => {
   const prioritizedAreas = useSelector(selectPrioritizedAreas);
   const outputMode = useSelector(selectOutputMode);
   const improvementSuggestions = useSelector(selectImprovementSuggestions);
+  const editedImages = useSelector(selectEditedImages);
   const [loadingSuggestions, setLoadingSuggestions] = React.useState<boolean>(true);
+  const [loadingEditedImages, setLoadingEditedImages] = React.useState<boolean>(false);
   
   // Use Redux image if available, fallback to location state
   const displayImageUrl = userPoseImage || userImageUrl;
@@ -143,7 +161,22 @@ const ResultsPage: React.FC = () => {
     });
   };
 
-  // Kick off pose suggestions on load
+  // Helper to convert base64 string to File object
+  const base64ToFile = (base64String: string, filename: string = 'image.jpg'): File => {
+    const arr = base64String.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  // Kick off pose suggestions and edited images on load
   React.useEffect(() => {
     let cancelled = false;
     const run = async () => {
@@ -210,6 +243,68 @@ const ResultsPage: React.FC = () => {
     return () => { cancelled = true; };
     // Re-run if inputs change significantly
   }, [userPoseImage, userImageUrl, similarImageFilenames, desiredStyle, prioritizedAreas, outputMode, improvementSuggestions, dispatch]);
+
+  // Handle edited images generation
+  React.useEffect(() => {
+    let cancelled = false;
+    
+    const generateEditedImages = async () => {
+      // If edited images already exist, skip
+      if (editedImages && editedImages.length >= 2) {
+        return;
+      }
+
+      // Preconditions: need user image and two reference filenames
+      const hasUserImage = !!(userPoseImage || userImageUrl);
+      const hasTwoRefs = similarImageFilenames && similarImageFilenames.length >= 2;
+      if (!hasUserImage || !hasTwoRefs) {
+        return;
+      }
+
+      setLoadingEditedImages(true);
+
+      try {
+        const ref1Path = `/data/images/${similarImageFilenames[0]}`;
+        const ref2Path = `/data/images/${similarImageFilenames[1]}`;
+        const [ref1, ref2] = await Promise.all([
+          fetchImageAsDataUrl(ref1Path),
+          fetchImageAsDataUrl(ref2Path)
+        ]);
+
+        const original = userPoseImage || userImageUrl!;
+        const userImageFile = base64ToFile(original, 'user-image.jpg');
+
+        // Generate edited images for both reference poses
+        const [edit1Response, edit2Response] = await Promise.all([
+          editImages({ image1: userImageFile, image2: base64ToFile(ref1, 'ref1.jpg') }),
+          editImages({ image1: userImageFile, image2: base64ToFile(ref2, 'ref2.jpg') })
+        ]);
+
+        if (!cancelled) {
+          const newEditedImages: string[] = [];
+          
+          if (edit1Response.success && edit1Response.imageB64) {
+            newEditedImages.push(`data:image/png;base64,${edit1Response.imageB64}`);
+          }
+          
+          if (edit2Response.success && edit2Response.imageB64) {
+            newEditedImages.push(`data:image/png;base64,${edit2Response.imageB64}`);
+          }
+          
+          if (newEditedImages.length > 0) {
+            dispatch(setEditedImages(newEditedImages));
+          }
+        }
+      } catch (err: any) {
+        console.error('Failed to generate edited images:', err);
+      } finally {
+        if (!cancelled) setLoadingEditedImages(false);
+      }
+    };
+
+    generateEditedImages();
+    return () => { cancelled = true; };
+  }, [userPoseImage, userImageUrl, similarImageFilenames, editedImages, dispatch]);
 
   return (
     <CustomPage useBindingContainer={false}>
@@ -426,7 +521,7 @@ const ResultsPage: React.FC = () => {
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {similarImageFilenames.length >= 2 
-                ? 'AI-matched reference poses based on similarity analysis of your keypoints.'
+                ? 'AI-matched reference poses based on similarity analysis of your keypoints. Note that the generated images are simply demo examples which help visualize the pose for you.'
                 : 'Two curated editorial options based on your photo. Each shows a reference and your photo adapted to match.'
               }
             </Typography>
@@ -440,52 +535,43 @@ const ResultsPage: React.FC = () => {
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>{pose.title}</Typography>
                     <Grid container spacing={1.5}>
                       <Grid item xs={6}>
-                        <Box sx={{ ...grayBoxSx, height: 220, padding: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Box sx={recommendedPoseFrameSx}>
                           {pose.filename ? (
-                            <Box sx={{
-                              width: '100%',
-                              height: '100%',
-                              borderRadius: 2,
-                              overflow: 'hidden',
-                              boxShadow: '0 6px 18px rgba(0,0,0,0.06)',
-                              backgroundColor: 'transparent',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              p: 0
-                            }}>
-                              <img
-                                src={`/data/images/${pose.filename}`}
-                                alt="Reference pose"
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'cover',
-                                  display: 'block'
-                                }}
-                              />
-                            </Box>
+                            <img
+                              src={`/data/images/${pose.filename}`}
+                              alt="Reference pose"
+                              style={{
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                objectFit: 'contain',
+                                display: 'block'
+                              }}
+                            />
                           ) : (
                             <Typography variant="caption" color="text.secondary">Reference</Typography>
                           )}
                         </Box>
                       </Grid>
                       <Grid item xs={6}>
-                        <Box sx={{ ...grayBoxSx, height: 220, padding: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Box sx={{
-                            width: '100%',
-                            height: '100%',
-                            borderRadius: 2,
-                            overflow: 'hidden',
-                            boxShadow: '0 6px 18px rgba(0,0,0,0.04)',
-                            backgroundColor: 'transparent',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            p: 0
-                          }}>
-                            <Typography variant="caption" color="text.secondary">Edited</Typography>
-                          </Box>
+                        <Box sx={recommendedPoseFrameSx}>
+                          {loadingEditedImages ? (
+                            <Skeleton variant="rectangular" width="90%" height="90%" sx={{ borderRadius: 2 }} />
+                          ) : editedImages && editedImages[pose.id - 1] ? (
+                            <img
+                              src={editedImages[pose.id - 1]}
+                              alt="AI-edited pose"
+                              style={{
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                objectFit: 'contain',
+                                display: 'block'
+                              }}
+                            />
+                          ) : (
+                            <Typography variant="caption" color="text.secondary">
+                              {displayImageUrl ? 'Generating...' : 'Upload image first'}
+                            </Typography>
+                          )}
                         </Box>
                       </Grid>
                     </Grid>

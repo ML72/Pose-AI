@@ -14,12 +14,44 @@ export interface ImageEditRequest {
   image2: File; // The image to mimic the pose of
 }
 
+export interface ImageEditRequestBase64 {
+  userImage: string; // Base64 string of the image to change the pose of
+  referenceImage: string; // Base64 string of the image to mimic the pose of
+}
+
 export interface ImageEditResponse {
   success: boolean;
   imageB64?: string;
   error?: string;
 }
 
+
+/**
+ * Convert base64 string to File object
+ */
+export const base64ToFile = (base64String: string, filename: string = 'image.jpg'): File => {
+  const arr = base64String.split(',');
+  const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  
+  return new File([u8arr], filename, { type: mime });
+};
+
+/**
+ * Edit images using base64 strings - convenience wrapper
+ */
+export const editImagesFromBase64 = async ({ userImage, referenceImage }: ImageEditRequestBase64): Promise<ImageEditResponse> => {
+  const image1File = base64ToFile(userImage, 'user-image.jpg');
+  const image2File = base64ToFile(referenceImage, 'reference-image.jpg');
+  
+  return editImages({ image1: image1File, image2: image2File });
+};
 
 /**
  * Edit two images using GPT-image-1 model

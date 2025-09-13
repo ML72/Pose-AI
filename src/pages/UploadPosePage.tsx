@@ -28,7 +28,7 @@ import {
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { setNewAlert } from '../service/alert';
-import { setUserPoseImage, setUserPoseKeypoints, setSimilarImageFilenames, setDesiredStyle, setPrioritizedAreas, setOutputMode, clearImprovementSuggestions } from '../store/slices/data';
+import { setUserPoseImage, setUserPoseKeypoints, setSimilarImageFilenames, setDesiredStyle, setPrioritizedAreas, setOutputMode, clearImprovementSuggestions, clearEditedImages } from '../store/slices/data';
 import { estimateKeypointsWithBlazePose, convertImageToBase64 } from '../service/blazePose';
 import { findSimilarPoses } from '../utils/poseComparison';
 
@@ -100,6 +100,9 @@ const UploadPosePage: React.FC = () => {
     try {
       // Clear any existing improvement suggestions before starting new analysis
       dispatch(clearImprovementSuggestions());
+      
+      // Clear any existing edited images to ensure fresh generation
+      dispatch(clearEditedImages());
 
       // Convert image to base64
       const base64Image = await convertImageToBase64(file);
