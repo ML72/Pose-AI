@@ -535,44 +535,50 @@ const ResultsPage: React.FC = () => {
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>{pose.title}</Typography>
                     <Grid container spacing={1.5}>
                       <Grid item xs={6}>
-                        <Box sx={recommendedPoseFrameSx}>
-                          {pose.filename ? (
-                            <img
-                              src={`/data/images/${pose.filename}`}
-                              alt="Reference pose"
-                              style={{
-                                maxWidth: '100%',
-                                maxHeight: '100%',
-                                objectFit: 'contain',
-                                display: 'block'
-                              }}
-                            />
-                          ) : (
-                            <Typography variant="caption" color="text.secondary">Reference</Typography>
-                          )}
-                        </Box>
+                        <Stack spacing={0.5} sx={{ width: '100%' }}>
+                          <Typography variant="overline" sx={{ fontWeight: 700 }}>Reference</Typography>
+                          <Box sx={recommendedPoseFrameSx}>
+                            {pose.filename ? (
+                              <img
+                                src={`/data/images/${pose.filename}`}
+                                alt={`Reference pose ${pose.title}`}
+                                style={{
+                                  maxWidth: '100%',
+                                  maxHeight: '100%',
+                                  objectFit: 'contain',
+                                  display: 'block'
+                                }}
+                              />
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">Reference</Typography>
+                            )}
+                          </Box>
+                        </Stack>
                       </Grid>
                       <Grid item xs={6}>
-                        <Box sx={recommendedPoseFrameSx}>
-                          {loadingEditedImages ? (
-                            <Skeleton variant="rectangular" width="90%" height="90%" sx={{ borderRadius: 2 }} />
-                          ) : editedImages && editedImages[pose.id - 1] ? (
-                            <img
-                              src={editedImages[pose.id - 1]}
-                              alt="AI-edited pose"
-                              style={{
-                                maxWidth: '100%',
-                                maxHeight: '100%',
-                                objectFit: 'contain',
-                                display: 'block'
-                              }}
-                            />
-                          ) : (
-                            <Typography variant="caption" color="text.secondary">
-                              {displayImageUrl ? 'Generating...' : 'Upload image first'}
-                            </Typography>
-                          )}
-                        </Box>
+                        <Stack spacing={0.5} sx={{ width: '100%' }}>
+                          <Typography variant="overline" sx={{ fontWeight: 700 }}>Edited</Typography>
+                          <Box sx={recommendedPoseFrameSx}>
+                            {loadingEditedImages ? (
+                              <Skeleton variant="rectangular" width="90%" height="90%" sx={{ borderRadius: 2 }} />
+                            ) : editedImages && editedImages[pose.id - 1] ? (
+                              <img
+                                src={editedImages[pose.id - 1]}
+                                alt={`Edited result for ${pose.title}`}
+                                style={{
+                                  maxWidth: '100%',
+                                  maxHeight: '100%',
+                                  objectFit: 'contain',
+                                  display: 'block'
+                                }}
+                              />
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">
+                                {displayImageUrl ? 'Generating...' : 'Upload image first'}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Stack>
                       </Grid>
                     </Grid>
                     <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>

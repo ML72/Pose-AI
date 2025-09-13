@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Button, 
   Container, 
@@ -12,7 +12,12 @@ import {
   IconButton,
   Paper,
   AppBar,
-  Toolbar
+  Toolbar,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  Divider
 } from '@mui/material';
 import { 
   CameraAlt, 
@@ -27,7 +32,9 @@ import {
   Speed,
   CloudDone,
   Gesture,
-  Bolt
+  Bolt,
+  Menu as MenuIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
@@ -38,6 +45,7 @@ import { setNewAlert } from '../service/alert';
 const LandingPage: React.FC = () => {
   const dispatch = useDispatch();
   const history = useHistory();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleGetStarted = () => {
     // Navigate to upload page
@@ -46,6 +54,10 @@ const LandingPage: React.FC = () => {
     } catch {
       setNewAlert(dispatch, { msg: "Navigating to upload…" });
     }
+  };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
   };
 
   const features = [
@@ -79,22 +91,161 @@ const LandingPage: React.FC = () => {
 
   return (
     <CustomPage useBindingContainer={false}>
-      {/* Hero Section */}
-      {/* Header */}
-      <AppBar position="fixed" sx={{ backgroundColor: 'rgba(249, 231, 242, 0.5)', opacity: 1, height: '10vh', justifyContent: 'center', boxShadow: 'none' }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: 'rgb(157, 114, 165)', display: 'flex', alignItems: 'center', fontSize: '1rem', letterSpacing: 2, fontWeight: '600' }}>
-            <Box
-              component="img"
-              src="/favicon.png"
-              alt="Pose AI Logo"
-              sx={{ width: 60, height: 60, mr: 1 }}
-              style={{ marginRight: 18, marginLeft: 8 }}
-            />
-            {/* Pose-AI */}
-          </Typography>
-        </Toolbar>
+      {/* Professional Navbar */}
+      <AppBar 
+        position="fixed" 
+        elevation={0}
+        sx={{ 
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(106, 17, 203, 0.08)',
+          height: '80px',
+          justifyContent: 'center',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(135deg, rgba(106, 17, 203, 0.02) 0%, rgba(229, 57, 53, 0.02) 100%)',
+            pointerEvents: 'none'
+          }
+        }}
+      >
+        <Container maxWidth="xl">
+          <Toolbar sx={{ height: '80px', px: 0 }}>
+            {/* Logo and Brand */}
+            <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              <Box
+                component="img"
+                src="/favicon.png"
+                alt="Pose AI Logo"
+                sx={{ 
+                  width: 42, 
+                  height: 42, 
+                  mr: 1.5,
+                  filter: 'drop-shadow(0 2px 4px rgba(106, 17, 203, 0.15))'
+                }}
+              />
+              <Typography 
+                variant="h5" 
+                component="div" 
+                sx={{ 
+                  color: 'rgb(106, 17, 203)',
+                  fontWeight: 700,
+                  fontSize: '1.5rem',
+                  letterSpacing: '-0.02em',
+                  background: 'linear-gradient(135deg, rgb(106, 17, 203) 0%, rgb(154, 72, 245) 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}
+              >
+                Pose AI
+              </Typography>
+            </Box>
+
+            {/* Spacer */}
+            <Box sx={{ flexGrow: 1 }} />
+
+            {/* Mobile Menu Button */}
+            <IconButton
+              sx={{ 
+                display: { xs: 'flex', md: 'none' },
+                color: 'rgb(106, 17, 203)',
+                ml: 2
+              }}
+              onClick={toggleMobileMenu}
+            >
+              <MenuIcon />
+            </IconButton>
+
+            {/* CTA Button */}
+            <Button
+              variant="contained"
+              onClick={handleGetStarted}
+              sx={{
+                ml: { xs: 1, md: 4 },
+                display: { xs: 'none', sm: 'flex' },
+                background: 'linear-gradient(135deg, rgb(106, 17, 203) 0%, rgb(154, 72, 245) 100%)',
+                color: 'white',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                px: 3,
+                py: 1.2,
+                borderRadius: '12px',
+                textTransform: 'none',
+                boxShadow: '0 4px 14px 0 rgba(106, 17, 203, 0.25)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, rgb(95, 15, 183) 0%, rgb(144, 62, 235) 100%)',
+                  boxShadow: '0 6px 20px 0 rgba(106, 17, 203, 0.35)',
+                  transform: 'translateY(-2px)'
+                },
+                '&:active': {
+                  transform: 'translateY(0px)'
+                }
+              }}
+            >
+              Get Started
+            </Button>
+          </Toolbar>
+        </Container>
       </AppBar>
+
+      {/* Mobile Navigation Drawer */}
+      <Drawer
+        anchor="right"
+        open={mobileMenuOpen}
+        onClose={toggleMobileMenu}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            width: 280,
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)'
+          }
+        }}
+      >
+        <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
+          <IconButton onClick={toggleMobileMenu} sx={{ color: 'rgb(106, 17, 203)' }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <Divider />
+        <List sx={{ px: 2 }}>
+          <ListItem sx={{ py: 2 }}>
+            <Button
+              variant="contained"
+              onClick={() => {
+                handleGetStarted();
+                toggleMobileMenu();
+              }}
+              fullWidth
+              sx={{
+                background: 'linear-gradient(135deg, rgb(106, 17, 203) 0%, rgb(154, 72, 245) 100%)',
+                color: 'white',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                py: 1.5,
+                borderRadius: '12px',
+                textTransform: 'none',
+                boxShadow: '0 4px 14px 0 rgba(106, 17, 203, 0.25)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, rgb(95, 15, 183) 0%, rgb(144, 62, 235) 100%)',
+                  boxShadow: '0 6px 20px 0 rgba(106, 17, 203, 0.35)'
+                }
+              }}
+            >
+              Get Started
+            </Button>
+          </ListItem>
+        </List>
+      </Drawer>
       <Box
         sx={{
           background: 'radial-gradient(1200px 600px at 80% 10%, rgba(154, 72, 245, 0.14), transparent 60%), radial-gradient(800px 400px at 10% 90%, rgba(229, 57, 53, 0.14), transparent 70%), linear-gradient(135deg, rgba(106, 17, 203, 0.10) 0%, rgba(229, 57, 53, 0.10) 100%)',
@@ -103,7 +254,7 @@ const LandingPage: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           position: 'relative',
-          marginTop: '10vh',
+          marginTop: '80px',
           overflow: 'hidden',
           // Animated grid overlay
           '& .tech-grid': {
