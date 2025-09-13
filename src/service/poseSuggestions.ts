@@ -94,7 +94,7 @@ const poseAnalysisSchema = {
           },
           changeDescription: {
             type: "string",
-            description: "How to adjust from the original pose [Image 1] to the reference pose [Image 2] or [Image 3]"
+            description: "How to adjust from the original pose [Image 1] to the reference pose [Image 2] or [Image 3]. Startwith 'To mimic the pose in Image 2, ' or 'To mimic the pose in Image 3, ' and then provide the specific instructions."
           },
           benefit: {
             type: "string",
