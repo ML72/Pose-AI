@@ -13,15 +13,21 @@ This is boilerplate code for a cross-platform mobile application using the follo
     npm install
     ```
 
-2. Run the following to start the development server:
+2. Add necessary environment variables in a `.env` file in the root directory. For example:
+
+    ```
+    VITE_OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxx
+    ```
+
+3. Run the following to start the development server:
 
     ```
     npm run dev
     ```
 
-3. Open a browser and go to `localhost:5173` to see the app!
+4. Open a browser and go to `localhost:5173` to see the app!
 
-4. Type `Ctrl+C` or `q` in the terminal with the server to stop the server.
+5. Type `Ctrl+C` or `q` in the terminal with the server to stop the server.
 
 ## Updates
 
