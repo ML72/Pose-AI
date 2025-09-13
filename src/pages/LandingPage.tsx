@@ -71,7 +71,7 @@ const LandingPage: React.FC = () => {
 
   const highlights = [
   { icon: <LockOutlined fontSize="small" sx={{ mr: 0.5 }} />, label: 'Encrypted Data' },
-  { icon: <Speed fontSize="small" sx={{ mr: 0.5 }} />, label: 'Real Time' },
+  { icon: <Speed fontSize="small" sx={{ mr: 0.5 }} />, label: 'Quick Iteration' },
   { icon: <CloudDone fontSize="small" sx={{ mr: 0.5 }} />, label: 'Privacy First' }
   ];
 
@@ -157,7 +157,7 @@ const LandingPage: React.FC = () => {
                       mb: 2
                     }}
                   >
-                    Perfect Your Pose with AI
+                    Perfect Your Pose
                   </Typography>
                   <Typography
                     variant="h6"
@@ -254,24 +254,67 @@ const LandingPage: React.FC = () => {
                 >
                   <IconButton
                     sx={{
-                      background: 'linear-gradient(135deg, #6A11CB 0%, #E53935 100%)',
-                      color: 'white',
+                      background: 'transparent',
+                      color: 'inherit',
                       mb: 2,
-                      width: { xs: 56, sm: 72 },
-                      height: { xs: 56, sm: 72 },
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #4C0FA3 0%, #B71C1C 100%)',
+                      width: { xs: 72, sm: 96 },
+                      height: { xs: 72, sm: 96 },
+                      p: 0,
+                      borderRadius: '50%',
+                      border: 'none',
+                      boxShadow: 'none',
+                      position: 'relative',
+                      // faint layered glows behind the icon
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        left: '50%',
+                        top: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: { xs: 110, sm: 150 },
+                        height: { xs: 110, sm: 150 },
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle at 30% 30%, rgba(154,72,245,0.16), transparent 35%), radial-gradient(circle at 70% 70%, rgba(229,57,53,0.12), transparent 40%)',
+                        filter: 'blur(28px)',
+                        zIndex: -2,
+                        pointerEvents: 'none'
                       },
-                      boxShadow: '0 10px 30px rgba(106,17,203,0.35)'
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        left: '50%',
+                        top: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: { xs: 78, sm: 110 },
+                        height: { xs: 78, sm: 110 },
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle at 40% 40%, rgba(154,72,245,0.22), transparent 40%), radial-gradient(circle at 60% 60%, rgba(229,57,53,0.14), transparent 45%)',
+                        filter: 'blur(14px)',
+                        zIndex: -1,
+                        pointerEvents: 'none'
+                      },
+                      '&:hover': {
+                        background: 'transparent'
+                      }
                     }}
                   >
-                    <PhotoCamera fontSize="large" />
+                    <Box
+                      component="img"
+                      src="/favicon.png"
+                      alt="Camera"
+                      sx={{
+                        width: { xs: 40, sm: 64 },
+                        height: { xs: 40, sm: 64 },
+                        objectFit: 'contain',
+                        display: 'block'
+                      }}
+                    />
                   </IconButton>
                   <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
                     Live Preview
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Pose landmarks detected in real-time
+                    Pose landmarks detected in seconds
                   </Typography>
 
                   {/* Animated pose SVG */}
@@ -293,7 +336,7 @@ const LandingPage: React.FC = () => {
                       }
                     }}
                   >
-                    <svg width="100%" height="100%" viewBox="0 0 300 340" preserveAspectRatio="xMidYMid meet">
+                    <svg width="100%" height="100%" viewBox="0 0 300 280" preserveAspectRatio="xMidYMid meet">
                       {/* Glow backdrop */}
                       <defs>
                         <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -326,7 +369,7 @@ const LandingPage: React.FC = () => {
                     {/* floating highlight */}
                     <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', gap: 1, px: 1, py: 0.5, borderRadius: 999, background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(106,17,203,0.25)', backdropFilter: 'blur(6px)', fontSize: { xs: '0.8rem', sm: '1rem' } }}>
                       <Bolt fontSize="small" sx={{ color: 'primary.main' }} />
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>Real-time</Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>Lightning Fast</Typography>
                     </Box>
                   </Box>
                 </Paper>
