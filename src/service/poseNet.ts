@@ -3,7 +3,8 @@ import "@tensorflow/tfjs"; // ensure TensorFlow backend is registered in browser
 
 import { Keypoints, Keypoint } from "../types/Keypoints";
 import { averageSkeletonSimilarity } from "../utils/calculate";
-import keypointsData from "../../assets/keypoints.json";
+
+let keypointsData: any = null;
 
 let model: posenet.PoseNet | null = null;
 
@@ -71,6 +72,17 @@ const parseKeypointsDataset = (data: any): DatasetEntry[] => {
 };
 
 export const findMostSimilarImage = async (uploadedPose: Keypoints): Promise<string | null> => {
+  // Load keypoints data if not already loaded
+  if (!keypointsData) {
+    try {
+      const response = await fetch('/data/keypoints.json');
+      keypointsData = await response.json();
+    } catch (error) {
+      console.error('Failed to load keypoints data:', error);
+      return null;
+    }
+  }
+
   const dataset = parseKeypointsDataset(keypointsData as any);
 
   let best: { image: string; score: number } | null = null;
