@@ -41,7 +41,7 @@ The user wants the desired style of the pose of DESIRED_STYLE.
 Prioritize feedback on PRIORITIZED_AREAS.
 The language should be more OUTPUT_MODE.
 
-Please analyze the original pose and the two reference poses. Provide detailed feedback comparing the original pose with the reference poses. Be encouraging but specific in your feedback.
+Please analyze the original pose and the two reference poses. Provide detailed feedback to allow person in the origianl pose [Image 1] to mimic each of the reference poses [Image 2] and [Image 3]. Be encouraging but specific in your feedback.
 `;
 
 export interface PoseSuggestionRequest {
@@ -79,7 +79,7 @@ const poseAnalysisSchema = {
   properties: {
     suggestedImprovements: {
       type: "string",
-      description: "Specific advice for improvement based on the original pose and two reference poses"
+      description: "Specific advice for improvement based for the person in the original pose [Image 1] to mimic each of the reference poses [Image 2] and [Image 3]"
     },
     poseChanges: {
       type: "array",
@@ -93,11 +93,11 @@ const poseAnalysisSchema = {
           },
           changeDescription: {
             type: "string",
-            description: "How to adjust from the original pose to the reference pose"
+            description: "How to adjust from the original pose [Image 1] to the reference pose [Image 2] or [Image 3]"
           },
           benefit: {
             type: "string",
-            description: "Why this change would be beneficial"
+            description: "Why this change would be beneficial for the person in the original pose [Image 1]"
           }
         },
         required: ["referenceImage", "changeDescription", "benefit"],
@@ -106,7 +106,7 @@ const poseAnalysisSchema = {
     },
     overallFeedback: {
       type: "string",
-      description: "General assessment and encouragement"
+      description: "General assessment and encouragement for the person in the original pose [Image 1]"
     }
   },
   required: ["suggestedImprovements", "poseChanges", "overallFeedback"],
