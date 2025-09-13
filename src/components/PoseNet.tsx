@@ -54,34 +54,25 @@ const PoseNet: React.FC = () => {
   };
 
   const findMostSimilarImage = async (uploadedPose: Keypoints) => {
-    const assets = ["assets/test_dt.jpg", "assets/test_dt2.jpg", "assets/test_dt3.jpg"];
+    // Load precomputed poses from JSON
+    const response = await fetch("../../assets/data/poses.json");
+    const poseData = await response.json();
+  
     let minDistance = Infinity;
     let closestImage: string | null = null;
-
-    for (const asset of assets) {
-      const img = new Image();
-      img.src = asset;
-      await new Promise((resolve) => (img.onload = resolve));
-
-      const net = await posenet.load({
-        architecture: "MobileNetV1",
-        outputStride: 16,
-        inputResolution: { width: 257, height: 257 },
-        multiplier: 0.75,
-      });
-
-      const poseNetPose = await net.estimateSinglePose(img, { flipHorizontal: false });
-      const pose: Keypoints = mapPoseNetToKeypoints(poseNetPose);
-
+  
+    for (const entry of poseData) {
+      const pose: Keypoints = entry.pose;
+  
       const distance = calculateDistance(uploadedPose.keypoints, pose.keypoints);
       if (distance < minDistance) {
         minDistance = distance;
-        closestImage = asset;
+        closestImage = entry.image;
       }
     }
-
+  
     setMostSimilarImage(closestImage);
-  };
+  }; 
 
   const runPoseNet = async () => {
     if (!image || !canvasRef.current) return;
