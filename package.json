@@ -27,7 +27,6 @@
     "@mui/icons-material": "^5.16.7",
     "@mui/material": "^5.16.7",
     "@reduxjs/toolkit": "^1.9.7",
-    "@tensorflow-models/posenet": "^2.2.2",
     "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.3",
     "ionicons": "^7.4.0",

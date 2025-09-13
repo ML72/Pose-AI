@@ -16,14 +16,6 @@ export const BLAZEPOSE_SKELETON_EDGES: [number, number][] = [
   [24, 26], [26, 28], [28, 30], [28, 32], [30, 32], // right leg
 ];
 
-// PoseNet keypoints (17 total) for backward compatibility
-export const POSENET_SKELETON_EDGES: [number, number][] = [
-  [0, 1], [0, 2], [1, 3], [2, 4], // head
-  [5, 6], [6, 12], [12, 11], [11, 5], // body
-  [6, 8], [8, 10], [5, 7], [7, 9], // arms
-  [12, 14], [14, 16], [11, 13], [13, 15], // legs
-];
-
 // Default to BlazePose skeleton (better for 33 keypoints)
 export const SKELETON_EDGES = BLAZEPOSE_SKELETON_EDGES;
 
