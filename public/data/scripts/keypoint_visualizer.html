@@ -194,37 +194,28 @@
         const status = document.getElementById('status');
         const visualizeBtn = document.getElementById('visualizeBtn');
         
-        // Keypoint colors by body part
-        const keypointColors = {
-            'nose': '#ff0000',
-            'leftEye': '#ff0000', 'rightEye': '#ff0000',
-            'leftEar': '#ff0000', 'rightEar': '#ff0000',
-            'leftShoulder': '#00ff00', 'rightShoulder': '#00ff00',
-            'leftElbow': '#00ff00', 'rightElbow': '#00ff00',
-            'leftWrist': '#ffff00', 'rightWrist': '#ffff00',
-            'leftHip': '#0000ff', 'rightHip': '#0000ff',
-            'leftKnee': '#0000ff', 'rightKnee': '#0000ff',
-            'leftAnkle': '#ffff00', 'rightAnkle': '#ffff00'
-        };
+        // BlazePose 33 indices color assignment (using index strings in saved JSON)
+        const keypointColors = new Proxy({}, {
+            get: (_t, prop) => {
+                const idx = Number(prop);
+                if (Number.isNaN(idx)) return '#ff00ff';
+                if ([0,1,2,3,4,5,6,7,8,9,10].includes(idx)) return '#ff0000'; // head/face
+                if ([11,12,13,14,15,16].includes(idx)) return '#00ff00'; // shoulders/arms
+                if ([23,24,25,26,27,28,29,30,31,32].includes(idx)) return '#0000ff'; // hips/legs
+                return '#ffff00';
+            }
+        });
         
-        // Skeleton connections
+        // BlazePose skeleton pairs by index (kept in sync with extractor's saved format)
         const skeleton = [
-            ['leftShoulder', 'rightShoulder'],
-            ['leftShoulder', 'leftElbow'],
-            ['leftElbow', 'leftWrist'],
-            ['rightShoulder', 'rightElbow'],
-            ['rightElbow', 'rightWrist'],
-            ['leftShoulder', 'leftHip'],
-            ['rightShoulder', 'rightHip'],
-            ['leftHip', 'rightHip'],
-            ['leftHip', 'leftKnee'],
-            ['leftKnee', 'leftAnkle'],
-            ['rightHip', 'rightKnee'],
-            ['rightKnee', 'rightAnkle'],
-            ['nose', 'leftEye'],
-            ['nose', 'rightEye'],
-            ['leftEye', 'leftEar'],
-            ['rightEye', 'rightEar']
+            [0,1],[1,2],[2,3],[3,7],
+            [0,4],[4,5],[5,6],[6,8],
+            [9,10], [11,12],
+            [11,13],[13,15],
+            [12,14],[14,16],
+            [11,23],[12,24], [23,24],
+            [23,25],[25,27], [24,26],[26,28],
+            [27,29],[29,31], [28,30],[30,32]
         ];
         
         function showStatus(message, type = 'info') {
@@ -430,9 +421,9 @@
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
             ctx.lineWidth = 3;
             
-            skeleton.forEach(([point1Name, point2Name]) => {
-                const point1 = keypoints.find(kp => kp.name === point1Name);
-                const point2 = keypoints.find(kp => kp.name === point2Name);
+            skeleton.forEach(([i, j]) => {
+                const point1 = keypoints[i];
+                const point2 = keypoints[j];
                 
                 if (point1 && point2 && point1.score > 0.3 && point2.score > 0.3) {
                     ctx.beginPath();
@@ -490,7 +481,7 @@
             infoDiv.innerHTML = `
                 <h3>📊 Keypoint Information</h3>
                 <p><strong>Image:</strong> ${keypointEntry.filename}</p>
-                <p><strong>Total Keypoints:</strong> ${keypoints.length}</p>
+                <p><strong>Total Keypoints:</strong> ${keypoints.length} (MediaPipe 33)</p>
                 <p><strong>Confident Keypoints:</strong> ${validKeypoints.length} (score > 0.3)</p>
                 <p><strong>Average Confidence:</strong> ${(keypoints.reduce((sum, kp) => sum + kp.score, 0) / keypoints.length).toFixed(3)}</p>
             `;

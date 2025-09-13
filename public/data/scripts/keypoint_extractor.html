@@ -2,8 +2,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@2.2.2"></script>
     <title>Keypoint Extraction Tool</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
@@ -66,9 +64,10 @@
     <button id="startBtn" onclick="startExtraction()" disabled>Start Extraction</button>
     <button id="downloadBtn" onclick="downloadResults()" style="display:none;">Download keypoints.json</button>
     
-    <script>
+    <script type="module">
+        import { FilesetResolver, PoseLandmarker } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest';
         let extractionResults = [];
-        let net = null;
+        let poseLandmarker = null;
         let selectedFiles = [];
 
         // File handling
@@ -116,15 +115,14 @@
             }
         }
 
-        // Convert posenet pose to Keypoints format (matching your frontend)
-        const mapPoseNetToKeypoints = (pose) => {
-            const keypoints = pose.keypoints.map((kp) => ({
-                x: kp.position.x,
-                y: kp.position.y,
-                score: kp.score,
-                name: kp.part
-            }));
-            return { keypoints, keypoints3D: [] };
+        // Convert MediaPipe Pose Landmarker to Keypoints format (33 landmarks)
+        const mapMPToKeypoints = (mpResult, imgWidth, imgHeight) => {
+            if (!mpResult.landmarks || mpResult.landmarks.length === 0) return { keypoints: [], keypoints3D: [] };
+            const lm = mpResult.landmarks[0];
+            const world = (mpResult.worldLandmarks && mpResult.worldLandmarks[0]) || [];
+            const keypoints = lm.map((p, idx) => ({ x: p.x * imgWidth, y: p.y * imgHeight, score: typeof p.visibility === 'number' ? p.visibility : 1.0, name: String(idx) }));
+            const keypoints3D = world.map((p, idx) => ({ x: p.x, y: p.y, score: 1.0, name: String(idx) }));
+            return { keypoints, keypoints3D };
         };
 
         // Process a single uploaded file
@@ -138,8 +136,8 @@
                     img.onload = async () => {
                         try {
                             console.log(`Processing: ${file.name}`);
-                            const poseNetPose = await net.estimateSinglePose(img, { flipHorizontal: false });
-                            const pose = mapPoseNetToKeypoints(poseNetPose);
+                            const mpResult = poseLandmarker.detect(img);
+                            const pose = mapMPToKeypoints(mpResult, img.width, img.height);
                             resolve({
                                 filename: file.name,
                                 keypoints: pose
@@ -176,14 +174,18 @@
 
             try {
                 document.getElementById('startBtn').disabled = true;
-                document.getElementById('status').textContent = 'Loading PoseNet model...';
+                document.getElementById('status').textContent = 'Loading MediaPipe Pose Landmarker...';
                 
-                // Load PoseNet model with same config as your frontend
-                net = await posenet.load({
-                    architecture: "ResNet50",
-                    outputStride: 16,  // Lower output stride = higher accuracy (16 or 32 for ResNet50)
-                    inputResolution: { width: 513, height: 513 },  // Higher resolution = better accuracy
-                    quantBytes: 4,  // Higher precision (4 bytes vs 2 bytes)
+                const vision = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm');
+                poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task'
+                    },
+                    runningMode: 'IMAGE',
+                    numPoses: 1,
+                    minPoseDetectionConfidence: 0.5,
+                    minPosePresenceConfidence: 0.5,
+                    minTrackingConfidence: 0.5
                 });
                 
                 document.getElementById('status').textContent = 'Model loaded! Processing images...';
@@ -245,6 +247,9 @@
             
             console.log(`Downloaded keypoints.json with ${extractionResults.length} entries`);
         };
+        // Expose to window for button onclick handlers
+        window.startExtraction = startExtraction;
+        window.downloadResults = downloadResults;
     </script>
 </body>
 </html>
