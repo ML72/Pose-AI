@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, Container, Typography } from '@mui/material';
 import { useDispatch } from 'react-redux';
 
+import PoseNet from "../components/PoseNet";
 import CustomPage from '../components/CustomPage';
 import { setNewAlert } from '../service/alert';
 
@@ -21,6 +22,7 @@ const Landing: React.FC = () => {
         <Button variant="contained" fullWidth onClick={alertHandler}>
           Click me!
         </Button>
+        <PoseNet />
       </Container>
     </CustomPage>
   )
