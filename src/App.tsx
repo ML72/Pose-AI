@@ -10,7 +10,6 @@ import { IonReactRouter } from '@ionic/react-router';
 import LandingPage from './pages/LandingPage';
 import UploadPosePage from './pages/UploadPosePage';
 import ResultsPage from './pages/ResultsPage';
-import ImageEditPage from './pages/ImageEditPage';
 import PoseLandmarker from './components/PoseLandmarker';
 
 /* Basic CSS for apps built with Ionic */

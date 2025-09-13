@@ -17,6 +17,7 @@ This is boilerplate code for a cross-platform mobile application using the follo
 
     ```
     VITE_OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxx
+    VITE_CLAUDE_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxx
     ```
 
 3. Run the following to start the development server:
