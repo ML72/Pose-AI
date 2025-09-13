@@ -6,7 +6,7 @@ import PoseNet from "../components/PoseNet";
 import CustomPage from '../components/CustomPage';
 import { setNewAlert } from '../service/alert';
 
-const Landing: React.FC = () => {
+const LandingPage: React.FC = () => {
   const dispatch = useDispatch();
 
   const alertHandler = () => {
@@ -28,4 +28,4 @@ const Landing: React.FC = () => {
   )
 };
 
-export default Landing;
+export default LandingPage;
