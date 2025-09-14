@@ -14,7 +14,10 @@ import {
   Card,
   CardContent
 } from '@mui/material';
-import { ArrowBack, AutoAwesome, Download, TipsAndUpdates } from '@mui/icons-material';
+import ArrowBack from '@mui/icons-material/ArrowBack';
+import AutoAwesome from '@mui/icons-material/AutoAwesome';
+import Download from '@mui/icons-material/Download';
+import TipsAndUpdates from '@mui/icons-material/TipsAndUpdates';
 import CustomPage from '../components/CustomPage';
 import KeypointVisualization from '../components/KeypointVisualization';
 import { selectUserPoseImage, selectUserPoseKeypoints, selectSimilarImageFilenames, selectDesiredStyle, selectPrioritizedAreas, selectOutputMode, selectImprovementSuggestions, setImprovementSuggestions, selectEditedImages, setEditedImages } from '../store/slices/data';

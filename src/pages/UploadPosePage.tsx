@@ -17,14 +17,12 @@ import {
   Typography,
   CircularProgress
 } from '@mui/material';
-import {
-  CloudUpload,
-  Image as ImageIcon,
-  AutoAwesome,
-  CheckCircle,
-  Style as StyleIcon,
-  ArrowBack
-} from '@mui/icons-material';
+import CloudUpload from '@mui/icons-material/CloudUpload';
+import ImageIcon from '@mui/icons-material/Image';
+import AutoAwesome from '@mui/icons-material/AutoAwesome';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import StyleIcon from '@mui/icons-material/Style';
+import ArrowBack from '@mui/icons-material/ArrowBack';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { setNewAlert } from '../service/alert';

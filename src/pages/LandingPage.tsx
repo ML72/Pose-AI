@@ -19,23 +19,21 @@ import {
   ListItemText,
   Divider
 } from '@mui/material';
-import { 
-  CameraAlt, 
-  ModelTraining, 
-  AutoAwesome, 
-  ArrowForward,
-  PhotoCamera,
-  Palette,
-  Psychology,
-  TrendingUp,
-  LockOutlined,
-  Speed,
-  CloudDone,
-  Gesture,
-  Bolt,
-  Menu as MenuIcon,
-  Close as CloseIcon
-} from '@mui/icons-material';
+import CameraAlt from '@mui/icons-material/CameraAlt';
+import ModelTraining from '@mui/icons-material/ModelTraining';
+import AutoAwesome from '@mui/icons-material/AutoAwesome';
+import ArrowForward from '@mui/icons-material/ArrowForward';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import Palette from '@mui/icons-material/Palette';
+import Psychology from '@mui/icons-material/Psychology';
+import TrendingUp from '@mui/icons-material/TrendingUp';
+import LockOutlined from '@mui/icons-material/LockOutlined';
+import Speed from '@mui/icons-material/Speed';
+import CloudDone from '@mui/icons-material/CloudDone';
+import Gesture from '@mui/icons-material/Gesture';
+import Bolt from '@mui/icons-material/Bolt';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 

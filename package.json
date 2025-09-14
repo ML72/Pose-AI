@@ -37,7 +37,7 @@
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4",
     "redux-persist": "^6.0.0",
-    "uuid": "^9.0.1"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^4.8.2",
