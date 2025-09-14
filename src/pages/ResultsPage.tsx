@@ -128,7 +128,7 @@ const ResultsPage: React.FC = () => {
       : '0';
 
     return [
-      { label: 'Keypoints Detected', value: `${validKeypoints.length}/33` },
+      { label: 'Keypoints', value: `${validKeypoints.length}/33` },
       { label: 'Confidence', value: `${avgConfidence}%` },
       { label: 'Model', value: 'BlazePose' }
     ];
@@ -249,7 +249,7 @@ const ResultsPage: React.FC = () => {
             dispatch(setImprovementSuggestions(bullets));
           } else {
             if (response.error === 'MISSING_API_KEY') {
-              dispatch(setImprovementSuggestions(['Add your OpenAI API key to enable AI tips. Click “Enable AI Tips” below.']));
+              dispatch(setImprovementSuggestions(['Add your OpenAI API key to enable AI tips and visualizations. Click “Update OpenAI API Key” below.']));
             } else {
               dispatch(setImprovementSuggestions([response.error || 'Failed to retrieve suggestions.']));
             }
@@ -455,9 +455,6 @@ const ResultsPage: React.FC = () => {
                     {metrics.map((m) => (
                       <Chip key={m.label} label={`${m.label}: ${m.value}`} variant="outlined" />
                     ))}
-                    <Button size="small" variant="outlined" onClick={openApiKeyDialog} sx={{ ml: 'auto', height: 28, alignSelf: 'center' }}>
-                      Change API Key
-                    </Button>
                   </Stack>
 
                   <Divider />
@@ -537,18 +534,27 @@ const ResultsPage: React.FC = () => {
                     )}
                   </Box>
 
-                  {/* Enable AI tips CTA when API key missing */}
-                  {!hasApiKey || !improvementSuggestions ||
-                   (improvementSuggestions.length === 1 && (
-                      improvementSuggestions[0].includes('Add your OpenAI API key') ||
-                      improvementSuggestions[0].toLowerCase().includes('invalid openai api key')
-                   )) ? (
-                    <Box>
+                  {/* API Key management buttons - always visible */}
+                  <Box>
+                    <Stack direction="row" spacing={1}>
                       <Button variant="contained" startIcon={<AutoAwesome />} onClick={openApiKeyDialog}>
-                        Enable AI Tips & Edits
+                        Update OpenAI API Key
                       </Button>
-                    </Box>
-                  ) : null}
+                      <Button 
+                        variant="outlined" 
+                        color="secondary"
+                        disabled={!hasApiKey}
+                        onClick={() => {
+                          try { 
+                            localStorage.removeItem('OPENAI_API_KEY'); 
+                            window.dispatchEvent(new Event('openai-api-key-updated')); 
+                          } catch {}
+                        }}
+                      >
+                        Clear API Key
+                      </Button>
+                    </Stack>
+                  </Box>
 
                   {/* Download Report button removed per request */}
                 </Stack>
