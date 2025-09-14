@@ -1,10 +1,16 @@
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const client = new OpenAI({
-  apiKey:  import.meta.env.VITE_OPENAI_API_KEY, // You'll need to set this in your environment
-  dangerouslyAllowBrowser: true // Required for browser usage
-});
+const getClient = (): OpenAI | null => {
+  try {
+    const storedKey = typeof window !== 'undefined' ? localStorage.getItem('OPENAI_API_KEY') : null;
+    const envKey = import.meta.env?.VITE_OPENAI_API_KEY as string | undefined;
+    const apiKey = storedKey || envKey;
+    if (!apiKey) return null;
+    return new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+  } catch {
+    return null;
+  }
+};
 
 // Fixed prompt for image editing
 const FIXED_PROMPT = "Change the pose of the person in [Image 1] to mimic the person's pose in [Image 2]. Do not modify excessive outside features in [Image 1].";
@@ -58,6 +64,10 @@ export const editImagesFromBase64 = async ({ userImage, referenceImage }: ImageE
  */
 export const editImages = async ({ image1, image2 }: ImageEditRequest): Promise<ImageEditResponse> => {
   try {
+    const client = getClient();
+    if (!client) {
+      return { success: false, error: 'MISSING_API_KEY' };
+    }
     // Validate input files
     if (!image1 || !image2) {
       return {

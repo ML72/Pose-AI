@@ -35,7 +35,7 @@ const App: React.FC = () => {
 
   return (
     <IonApp>
-      <IonReactRouter>
+      <IonReactRouter basename={import.meta.env.BASE_URL}>
         <IonRouterOutlet>
           {/** Page routing here */}
           <Route exact path="/">

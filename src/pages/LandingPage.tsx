@@ -47,6 +47,8 @@ const LandingPage: React.FC = () => {
   const history = useHistory();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const base = (import.meta as any).env?.BASE_URL || '/';
+
   const handleGetStarted = () => {
     // Navigate to upload page
     try {
@@ -83,117 +85,57 @@ const LandingPage: React.FC = () => {
     }
   ];
 
-  const highlights = [
-  { icon: <LockOutlined fontSize="small" sx={{ mr: 0.5 }} />, label: 'Encrypted Data' },
-  { icon: <Speed fontSize="small" sx={{ mr: 0.5 }} />, label: 'Quick Iteration' },
-  { icon: <CloudDone fontSize="small" sx={{ mr: 0.5 }} />, label: 'Privacy First' }
+  const highlights: { icon: React.ReactNode; label: string }[] = [
+    { icon: <LockOutlined fontSize="small" />, label: 'Encrypted Data' },
+    { icon: <Speed fontSize="small" />, label: 'Quick Iteration' },
+    { icon: <CloudDone fontSize="small" />, label: 'Privacy First' }
   ];
 
   return (
     <CustomPage useBindingContainer={false}>
-      {/* Professional Navbar */}
-      <AppBar 
-        position="fixed" 
-        elevation={0}
-        sx={{ 
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(106, 17, 203, 0.08)',
-          height: '80px',
-          justifyContent: 'center',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'linear-gradient(135deg, rgba(106, 17, 203, 0.02) 0%, rgba(229, 57, 53, 0.02) 100%)',
-            pointerEvents: 'none'
-          }
-        }}
-      >
-        <Container maxWidth="xl">
-          <Toolbar sx={{ height: '80px', px: 0 }}>
-            {/* Logo and Brand */}
-            <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-              <Box
-                component="img"
-                src="/favicon.png"
-                alt="Pose AI Logo"
-                sx={{ 
-                  width: 42, 
-                  height: 42, 
-                  mr: 1.5,
-                  filter: 'drop-shadow(0 2px 4px rgba(106, 17, 203, 0.15))'
-                }}
-              />
-              <Typography 
-                variant="h5" 
-                component="div" 
-                sx={{ 
-                  color: 'rgb(106, 17, 203)',
-                  fontWeight: 700,
-                  fontSize: '1.5rem',
-                  letterSpacing: '-0.02em',
-                  background: 'linear-gradient(135deg, rgb(106, 17, 203) 0%, rgb(154, 72, 245) 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                }}
-              >
-                Pose AI
-              </Typography>
-            </Box>
-
-            {/* Spacer */}
-            <Box sx={{ flexGrow: 1 }} />
-
-            {/* Mobile Menu Button */}
-            <IconButton
+      <AppBar position="fixed" color="transparent" elevation={0} sx={{ backdropFilter: 'blur(8px)', backgroundColor: 'rgba(255,255,255,0.6)' }}>
+        <Toolbar sx={{ height: '80px', px: 0 }}>
+          {/* Logo and Brand */}
+          <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            <Box
+              component="img"
+              src={`${base}favicon.png`}
+              alt="Pose AI Logo"
               sx={{ 
-                display: { xs: 'flex', md: 'none' },
+                width: 42, 
+                height: 42, 
+                mr: 1.5,
+                filter: 'drop-shadow(0 2px 4px rgba(106, 17, 203, 0.15))'
+              }}
+            />
+            <Typography 
+              variant="h5" 
+              component="div" 
+              sx={{ 
                 color: 'rgb(106, 17, 203)',
-                ml: 2
-              }}
-              onClick={toggleMobileMenu}
-            >
-              <MenuIcon />
-            </IconButton>
-
-            {/* CTA Button */}
-            <Button
-              variant="contained"
-              onClick={handleGetStarted}
-              sx={{
-                ml: { xs: 1, md: 4 },
-                display: { xs: 'none', sm: 'flex' },
+                fontWeight: 700,
+                fontSize: '1.5rem',
+                letterSpacing: '-0.02em',
                 background: 'linear-gradient(135deg, rgb(106, 17, 203) 0%, rgb(154, 72, 245) 100%)',
-                color: 'white',
-                fontWeight: 600,
-                fontSize: '0.95rem',
-                px: 3,
-                py: 1.2,
-                borderRadius: '12px',
-                textTransform: 'none',
-                boxShadow: '0 4px 14px 0 rgba(106, 17, 203, 0.25)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, rgb(95, 15, 183) 0%, rgb(144, 62, 235) 100%)',
-                  boxShadow: '0 6px 20px 0 rgba(106, 17, 203, 0.35)',
-                  transform: 'translateY(-2px)'
-                },
-                '&:active': {
-                  transform: 'translateY(0px)'
-                }
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
               }}
             >
-              Get Started
-            </Button>
-          </Toolbar>
-        </Container>
+              Pose AI
+            </Typography>
+          </Box>
+
+          <Box sx={{ flexGrow: 1 }} />
+
+          <IconButton sx={{ display: { xs: 'flex', md: 'none' }, color: 'rgb(106, 17, 203)', ml: 2 }} onClick={toggleMobileMenu}>
+            <MenuIcon />
+          </IconButton>
+
+          <Button variant="contained" color="primary" endIcon={<ArrowForward />} onClick={handleGetStarted}>
+            Get Started
+          </Button>
+        </Toolbar>
       </AppBar>
 
       {/* Mobile Navigation Drawer */}
@@ -469,7 +411,7 @@ const LandingPage: React.FC = () => {
                   >
                     <Box
                       component="img"
-                      src="/favicon.png"
+                      src={`${base}favicon.png`}
                       alt="Camera"
                       sx={{
                         width: { xs: 40, sm: 64 },

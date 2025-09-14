@@ -22,6 +22,10 @@ import { analyzePoses } from '../service/poseSuggestions';
 import { Skeleton } from '@mui/material';
 import { editImages } from '../service/imageEdit';
 
+const openApiKeyDialog = () => {
+  window.dispatchEvent(new Event('open-api-key-dialog'));
+};
+
 type LocationState = {
   userImageUrl?: string | null;
   fileName?: string | null;
@@ -83,6 +87,18 @@ const ResultsPage: React.FC = () => {
   const editedImages = useSelector(selectEditedImages);
   const [loadingSuggestions, setLoadingSuggestions] = React.useState<boolean>(true);
   const [loadingEditedImages, setLoadingEditedImages] = React.useState<boolean>(false);
+  const [hasApiKey, setHasApiKey] = React.useState<boolean>(() => {
+    try { return !!(localStorage.getItem('OPENAI_API_KEY') || import.meta.env?.VITE_OPENAI_API_KEY); } catch { return false; }
+  });
+  const [editErrors, setEditErrors] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    const handler = () => {
+      try { setHasApiKey(!!(localStorage.getItem('OPENAI_API_KEY') || import.meta.env?.VITE_OPENAI_API_KEY)); } catch {}
+    };
+    window.addEventListener('openai-api-key-updated', handler);
+    return () => window.removeEventListener('openai-api-key-updated', handler);
+  }, []);
   
   // Use Redux image if available, fallback to location state
   const displayImageUrl = userPoseImage || userImageUrl;
@@ -184,7 +200,11 @@ const ResultsPage: React.FC = () => {
       setLoadingSuggestions(true);
       
       // If we already have improvement suggestions, skip the API call
-      if (improvementSuggestions && improvementSuggestions.length > 0) {
+      const hasBlockingMsg = improvementSuggestions && improvementSuggestions.length > 0 && (
+        improvementSuggestions[0].toLowerCase().includes('add your openai api key') ||
+        improvementSuggestions[0].toLowerCase().includes('invalid openai api key')
+      );
+      if (improvementSuggestions && improvementSuggestions.length > 0 && !(hasApiKey && hasBlockingMsg)) {
         setLoadingSuggestions(false);
         return;
       }
@@ -198,8 +218,9 @@ const ResultsPage: React.FC = () => {
       }
 
       try {
-        const ref1Path = `/data/images/${similarImageFilenames[0]}`;
-        const ref2Path = `/data/images/${similarImageFilenames[1]}`;
+        const base = (import.meta as any).env?.BASE_URL || '/';
+        const ref1Path = `${base}data/images/${similarImageFilenames[0]}`;
+        const ref2Path = `${base}data/images/${similarImageFilenames[1]}`;
         const [ref1, ref2] = await Promise.all([
           fetchImageAsDataUrl(ref1Path),
           fetchImageAsDataUrl(ref2Path)
@@ -227,7 +248,11 @@ const ResultsPage: React.FC = () => {
             }
             dispatch(setImprovementSuggestions(bullets));
           } else {
-            dispatch(setImprovementSuggestions([response.error || 'Failed to retrieve suggestions.']));
+            if (response.error === 'MISSING_API_KEY') {
+              dispatch(setImprovementSuggestions(['Add your OpenAI API key to enable AI tips. Click “Enable AI Tips” below.']));
+            } else {
+              dispatch(setImprovementSuggestions([response.error || 'Failed to retrieve suggestions.']));
+            }
           }
         }
       } catch (err: any) {
@@ -242,7 +267,7 @@ const ResultsPage: React.FC = () => {
     run();
     return () => { cancelled = true; };
     // Re-run if inputs change significantly
-  }, [userPoseImage, userImageUrl, similarImageFilenames, desiredStyle, prioritizedAreas, outputMode, improvementSuggestions, dispatch]);
+  }, [userPoseImage, userImageUrl, similarImageFilenames, desiredStyle, prioritizedAreas, outputMode, improvementSuggestions, hasApiKey, dispatch]);
 
   // Handle edited images generation
   React.useEffect(() => {
@@ -254,18 +279,19 @@ const ResultsPage: React.FC = () => {
         return;
       }
 
-      // Preconditions: need user image and two reference filenames
+      // Preconditions: need user image, two references, and API key
       const hasUserImage = !!(userPoseImage || userImageUrl);
       const hasTwoRefs = similarImageFilenames && similarImageFilenames.length >= 2;
-      if (!hasUserImage || !hasTwoRefs) {
+      if (!hasUserImage || !hasTwoRefs || !hasApiKey) {
         return;
       }
 
       setLoadingEditedImages(true);
 
       try {
-        const ref1Path = `/data/images/${similarImageFilenames[0]}`;
-        const ref2Path = `/data/images/${similarImageFilenames[1]}`;
+        const base = (import.meta as any).env?.BASE_URL || '/';
+        const ref1Path = `${base}data/images/${similarImageFilenames[0]}`;
+        const ref2Path = `${base}data/images/${similarImageFilenames[1]}`;
         const [ref1, ref2] = await Promise.all([
           fetchImageAsDataUrl(ref1Path),
           fetchImageAsDataUrl(ref2Path)
@@ -275,10 +301,20 @@ const ResultsPage: React.FC = () => {
         const userImageFile = base64ToFile(original, 'user-image.jpg');
 
         // Generate edited images for both reference poses
-        const [edit1Response, edit2Response] = await Promise.all([
-          editImages({ image1: userImageFile, image2: base64ToFile(ref1, 'ref1.jpg') }),
-          editImages({ image1: userImageFile, image2: base64ToFile(ref2, 'ref2.jpg') })
-        ]);
+        // Only attempt edits if API key is available
+        let edit1Response: any = { success: false };
+        let edit2Response: any = { success: false };
+        if (hasApiKey) {
+          setEditErrors([]);
+          [edit1Response, edit2Response] = await Promise.all([
+            editImages({ image1: userImageFile, image2: base64ToFile(ref1, 'ref1.jpg') }),
+            editImages({ image1: userImageFile, image2: base64ToFile(ref2, 'ref2.jpg') })
+          ]);
+          const errs: string[] = [];
+          if (!edit1Response.success) errs.push(edit1Response.error || 'Edit 1 failed');
+          if (!edit2Response.success) errs.push(edit2Response.error || 'Edit 2 failed');
+          setEditErrors(errs);
+        }
 
         if (!cancelled) {
           const newEditedImages: string[] = [];
@@ -297,6 +333,7 @@ const ResultsPage: React.FC = () => {
         }
       } catch (err: any) {
         console.error('Failed to generate edited images:', err);
+        setEditErrors([err?.message || 'Failed to generate edited images']);
       } finally {
         if (!cancelled) setLoadingEditedImages(false);
       }
@@ -304,7 +341,7 @@ const ResultsPage: React.FC = () => {
 
     generateEditedImages();
     return () => { cancelled = true; };
-  }, [userPoseImage, userImageUrl, similarImageFilenames, editedImages, dispatch]);
+  }, [userPoseImage, userImageUrl, similarImageFilenames, editedImages, hasApiKey, dispatch]);
 
   return (
     <CustomPage useBindingContainer={false}>
@@ -414,10 +451,13 @@ const ResultsPage: React.FC = () => {
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>Quick Review</Typography>
                   </Stack>
 
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
                     {metrics.map((m) => (
                       <Chip key={m.label} label={`${m.label}: ${m.value}`} variant="outlined" />
                     ))}
+                    <Button size="small" variant="outlined" onClick={openApiKeyDialog} sx={{ ml: 'auto', height: 28, alignSelf: 'center' }}>
+                      Change API Key
+                    </Button>
                   </Stack>
 
                   <Divider />
@@ -497,6 +537,19 @@ const ResultsPage: React.FC = () => {
                     )}
                   </Box>
 
+                  {/* Enable AI tips CTA when API key missing */}
+                  {!hasApiKey || !improvementSuggestions ||
+                   (improvementSuggestions.length === 1 && (
+                      improvementSuggestions[0].includes('Add your OpenAI API key') ||
+                      improvementSuggestions[0].toLowerCase().includes('invalid openai api key')
+                   )) ? (
+                    <Box>
+                      <Button variant="contained" startIcon={<AutoAwesome />} onClick={openApiKeyDialog}>
+                        Enable AI Tips & Edits
+                      </Button>
+                    </Box>
+                  ) : null}
+
                   {/* Download Report button removed per request */}
                 </Stack>
               </Paper>
@@ -540,7 +593,7 @@ const ResultsPage: React.FC = () => {
                           <Box sx={recommendedPoseFrameSx}>
                             {pose.filename ? (
                               <img
-                                src={`/data/images/${pose.filename}`}
+                                src={`${(import.meta as any).env?.BASE_URL || '/'}data/images/${pose.filename}`}
                                 alt={`Reference pose ${pose.title}`}
                                 style={{
                                   maxWidth: '100%',
@@ -573,9 +626,16 @@ const ResultsPage: React.FC = () => {
                                 }}
                               />
                             ) : (
-                              <Typography variant="caption" color="text.secondary">
-                                {displayImageUrl ? 'Generating...' : 'Upload image first'}
-                              </Typography>
+                              <Stack spacing={0.5} alignItems="center">
+                                <Typography variant="caption" color="text.secondary">
+                                  {displayImageUrl ? (hasApiKey ? 'Generating...' : 'Enable AI tips & edits') : 'Upload image first'}
+                                </Typography>
+                                {editErrors && editErrors.length > 0 && (
+                                  <Typography variant="caption" color="error" sx={{ textAlign: 'center', px: 1 }}>
+                                    {editErrors[pose.id - 1] || editErrors[0]}
+                                  </Typography>
+                                )}
+                              </Stack>
                             )}
                           </Box>
                         </Stack>

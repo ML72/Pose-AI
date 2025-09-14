@@ -125,7 +125,8 @@ const UploadPosePage: React.FC = () => {
 
       // Load keypoints dataset and find similar poses
       try {
-        const response = await fetch('/data/keypoints.json');
+        const base = (import.meta as any).env?.BASE_URL || '/';
+        const response = await fetch(`${base}data/keypoints.json`);
         if (!response.ok) {
           throw new Error('Failed to load keypoints dataset');
         }

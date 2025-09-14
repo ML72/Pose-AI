@@ -23,11 +23,18 @@
 
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true
-});
+// Lazy client getter so the app can run without an API key.
+export const getOpenAIClient = (): OpenAI | null => {
+  try {
+    const storedKey = typeof window !== 'undefined' ? localStorage.getItem('OPENAI_API_KEY') : null;
+    const envKey = import.meta.env?.VITE_OPENAI_API_KEY as string | undefined;
+    const apiKey = storedKey || envKey;
+    if (!apiKey) return null;
+    return new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+  } catch {
+    return null;
+  }
+};
 
 // Fixed prompt for pose analysis and suggestions
 const POSE_ANALYSIS_PROMPT = `You are an expert pose analyst instructor. I will provide you with three images:
@@ -141,6 +148,12 @@ export const analyzePoses = async ({
   outputMode
 }: PoseSuggestionRequest): Promise<PoseSuggestionResponse> => {
   try {
+    // Guard: require API key, but do not crash the app
+    const openai = getOpenAIClient();
+    if (!openai) {
+      return { success: false, error: 'MISSING_API_KEY' };
+    }
+
     // Validate input files
     if (!originalImage || !referenceImage1 || !referenceImage2) {
       return {

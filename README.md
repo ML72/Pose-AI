@@ -17,29 +17,28 @@ On-device pose analysis with AI-powered suggestions. Upload a photo, detect body
 Prerequisites:
 - Node.js 18+ and npm
 
-1) Install dependencies
+1) Install dependencies (first time only)
 
 ```bash
 npm install
 ```
 
-2) (Optional, enables AI tips) Create `.env` in project root
+2) Build and preview (recommended for local run)
 
 ```bash
-VITE_OPENAI_API_KEY=sk-...your_key...
+npm run build
+npm run preview
 ```
 
-Notes:
-- Keys in `VITE_...` variables are exposed to the browser. For production, route OpenAI calls through a server you control.
-- AI suggestions work without any other config; if `VITE_OPENAI_API_KEY` is missing or invalid, the app falls back to built-in non-AI tips.
+Open the URL printed by Vite Preview (for example `http://localhost:4173/Pose-AI/`). This is the only flow you need for local serving.
 
-3) Start dev server
+Optional (live dev server):
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:5173`.
+Then open the dev URL (e.g., `http://localhost:5173/`).
 
 ---
 
